@@ -18,15 +18,27 @@
 (lambda comperator-by-frames [a b]
   (frame-comperator (a:frame) (b:frame)))
 
+(lambda f-mostly-in-x [innie outie]
+  (let [intersection (innie:intersect outie)]
+    (>= intersection.w (* innie.w THRESHOLD))))
+
+(lambda f-mostly-in-y [innie outie]
+  (let [intersection (innie:intersect outie)]
+    (>= intersection.h (* innie.h THRESHOLD))))
+
+(lambda f-mostly-in [innie outie]
+  (and (f-mostly-in-x innie outie)
+       (f-mostly-in-y innie outie)))
+
+(lambda is-valid-window [win]
+  (and (win:isStandard)
+       (not (win:isMinimized))))
+
 (lambda get-screens [] 
   (hs.screen.allScreens))
 
 (lambda get-screens-sorted []
   (sort (get-screens) comperator-by-frames))
-
-(lambda is-valid-window [win]
-  (and (win:isStandard)
-       (not (win:isMinimized))))
 
 (lambda get-windows []
   (icollect [_ win (ipairs (hs.window.allWindows))]
@@ -44,17 +56,6 @@
   (each [_ border (ipairs borders)]
     (border:delete))
   (set borders []))
-(lambda f-mostly-in-x [innie outie]
-  (let [intersection (innie:intersect outie)]
-    (>= intersection.w (* innie.w THRESHOLD))))
-
-(lambda f-mostly-in-y [innie outie]
-  (let [intersection (innie:intersect outie)]
-    (>= intersection.h (* innie.h THRESHOLD))))
-
-(lambda f-mostly-in [innie outie]
-  (and (f-mostly-in-x innie outie)
-       (f-mostly-in-y innie outie)))
 
 (lambda test []
   (let [screens (get-screens-sorted)
@@ -64,7 +65,9 @@
         (scr:name)
         (icollect [_ win (ipairs windows)]
           (if (f-mostly-in (win:frame) (scr:frame))
-              (win:title))))))))
+              (win:title))))))
+    (each [i win (ipairs windows)]
+          (print (.. i " - " (win:title))))))
 
 (hs.hotkey.bind [:shift :ctrl] :D test)
 (hs.hotkey.bind [:shift :ctrl] :S clear-borders)
