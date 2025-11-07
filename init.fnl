@@ -3,8 +3,6 @@
 
 (local THRESHOLD 0.9)
 
-(var borders [])
-
 (lambda sort [tbl comperator]
   "Sort tbl based on comperator function."
   (let [sorted (icollect [_ v (ipairs tbl)] v)]
@@ -69,17 +67,6 @@
   "Returns list of windows sorted on comperator-by-frames"
   (sort (get-windows) comperator-by-frames))
 
-(lambda show-border [border]
-  "Draws a border and keeps track of it in borders global var"
-  (border:show)
-  (table.insert borders border))
-
-(lambda clear-borders []
-  "Deletes all borders and clears borders global var"
-  (each [_ border (ipairs borders)]
-    (border:delete))
-  (set borders []))
-
 (lambda test []
   (let [screens (get-screens-sorted)
         windows (get-windows-sorted)]
@@ -90,8 +77,8 @@
           (if (f-mostly-in (win:frame) (scr:frame))
               (win:title))))))
     (each [i win (ipairs windows)]
-          (show-border 
+          (dbg.show-border 
             (dbg.create-border (win:frame))))))
 
 (hs.hotkey.bind [:shift :ctrl] :D test)
-(hs.hotkey.bind [:shift :ctrl] :S clear-borders)
+(hs.hotkey.bind [:shift :ctrl] :S dbg.clear-borders)

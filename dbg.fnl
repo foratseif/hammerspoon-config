@@ -1,3 +1,16 @@
+(var borders [])
+
+(lambda show-border [border]
+  "Draws a border and keeps track of it in borders global var"
+  (border:show)
+  (table.insert borders border))
+
+(lambda clear-borders []
+  "Deletes all borders and clears borders global var"
+  (each [_ border (ipairs borders)]
+    (border:delete))
+  (set borders []))
+
 (lambda to-str [thing ?key ?indent] 
   "Converts variable to string"
   (let [indent (or ?indent "")] 
@@ -37,4 +50,7 @@
   "Converts variable to string and prints it"
   (print (to-str thing)))
 
-{: inspect : create-border}
+{: inspect 
+ : create-border
+ : show-border
+ : clear-borders}
