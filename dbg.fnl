@@ -1,4 +1,5 @@
 (lambda to-str [thing ?key ?indent] 
+  "Converts variable to string"
   (let [indent (or ?indent "")] 
     (..
       indent
@@ -16,6 +17,8 @@
       (if ?indent "\n" ""))))
 
 (lambda create-border [rect ?color]
+  "Creates a border based on rect.
+    Accepts color but has default if color is nil."
   (let [border (hs.drawing.rectangle rect)]
     (border:setStrokeWidth 4)
     (border:setFill false)
@@ -31,6 +34,7 @@
     border))
 
 (lambda inspect [thing] 
+  "Converts variable to string and prints it"
   (print (to-str thing)))
 
 {: inspect : create-border}

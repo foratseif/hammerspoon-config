@@ -90,7 +90,8 @@
           (if (f-mostly-in (win:frame) (scr:frame))
               (win:title))))))
     (each [i win (ipairs windows)]
-          (print (.. i " - " (win:title))))))
+          (show-border 
+            (dbg.create-border (win:frame))))))
 
 (hs.hotkey.bind [:shift :ctrl] :D test)
 (hs.hotkey.bind [:shift :ctrl] :S clear-borders)
