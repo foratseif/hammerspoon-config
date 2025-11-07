@@ -67,6 +67,8 @@
   "Returns list of windows sorted on comperator-by-frames"
   (sort (get-windows) comperator-by-frames))
 
+
+;; testing stuff here
 (lambda test []
   (let [screens (get-screens-sorted)
         windows (get-windows-sorted)]
