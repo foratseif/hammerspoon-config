@@ -19,13 +19,13 @@
     (table.sort sorted comperator)
     sorted))
 
-(lambda merge-frames [a b] 
-  (let [x (math.min a.x b.x) 
-        y (math.min a.y b.y)
-        w (- (math.max (+ a.x a.w) 
-                       (+ b.x b.w)) x)
-        h (- (math.max (+ a.y a.h) 
-                       (+ b.y b.h)) y)]
+(lambda f-merge [frame-a frame-b] 
+  (let [x (math.min frame-a.x frame-b.x) 
+        y (math.min frame-a.y frame-b.y)
+        w (- (math.max (+ frame-a.x frame-a.w) 
+                       (+ frame-b.x frame-b.w)) x)
+        h (- (math.max (+ frame-a.y frame-a.h) 
+                       (+ frame-b.y frame-b.h)) y)]
     {: x : y : w : h}))
 
 (lambda frame-comperator [frame-a frame-b]
@@ -101,7 +101,7 @@
     (each [_ win (ipairs windows)]
       (let [?gr (first groups #(f-interection (win:frame) $2))]
         (if ?gr 
-            (let [merged (merge-frames (win:frame) ?gr)]
+            (let [merged (f-merge (win:frame) ?gr)]
                 (set ?gr.x merged.x)
                 (set ?gr.y merged.y)
                 (set ?gr.w merged.w)
