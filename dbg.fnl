@@ -11,23 +11,25 @@
     (border:delete))
   (set borders []))
 
-(lambda to-str [thing ?key ?indent] 
+(lambda to-str [thing ?key ?level] 
   "Converts variable to string"
-  (let [indent (or ?indent "")] 
-    (..
-      indent
-      (if ?key (.. ?key " = ") "")
-      (case [(type thing)]
-        [:string] (.. "'" thing "'")
-        [:userdata] "#userdata"
-        [:table] 
-          (.. (.. "{" "\n")
-              (table.concat 
-                (icollect [k v (pairs thing)] 
-                  (to-str v k (.. "  " indent))))
-              (.. indent "}"))
-        _ (tostring thing))
-      (if ?indent "\n" ""))))
+  (let [level  (or ?level 0)
+        indent (string.rep "  " level)] 
+    (.. indent
+        (if ?key (.. ?key " = ") "")
+        (if (> level 5)
+          "MAX-LEVEL"
+          (case [(type thing)]
+            [:string] (.. "'" thing "'")
+            [:userdata] "#userdata"
+            [:table] 
+              (.. (.. "{" "\n")
+                  (table.concat 
+                    (icollect [k v (pairs thing)] 
+                      (to-str v k (+ level 1))))
+                  (.. indent "}"))
+            _ (tostring thing)))
+        (if (> level 0) "\n" ""))))
 
 (lambda create-border [rect ?color]
   "Creates a border based on rect.
@@ -51,6 +53,7 @@
   (print (to-str thing)))
 
 {: inspect 
+ : to-str
  : create-border
  : show-border
  : clear-borders}
