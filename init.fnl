@@ -1,23 +1,36 @@
 (local dbg (require :dbg))
 (require :boring)
 
-(local THRES_INSIDE 0.9)
-(local THRES_INTER 0.5)
+(local THRES_INSIDE 0.55)
+(local THRES_INTER 75)
 
 (lambda first [tbl ?cond]
   "Returns the first element in the table that returns
     true for the condition. If the condition is not
     set then it returns the first truthy element."
-  (let [cond (or ?cond #$2)]
+  (let [cond (or ?cond #$1)]
     (accumulate [ret nil _ v (ipairs tbl)] 
       (or ret 
-          (if (cond i v) v nil)))))
+          (if (cond v 1) v nil)))))
+
+(lambda map [tbl mapper]
+  "Maps sequential table"
+  (icollect [i v (ipairs tbl)] (mapper v i)))
+
+(lambda filter [tbl cond]
+  "Filter sequential table"
+  (icollect [i v (ipairs tbl)] (if (cond v i) v)))
 
 (lambda sort [tbl comperator]
   "Sort tbl based on comperator function."
   (let [sorted (icollect [_ v (ipairs tbl)] v)]
     (table.sort sorted comperator)
     sorted))
+
+(lambda frame-of [thing] 
+  (let [metatable  (getmetatable thing)
+        frame-func (?. metatable :frame)]
+    (if frame-func (thing:frame) thing)))
 
 (lambda f-merge [frame-a frame-b] 
   (let [x (math.min frame-a.x frame-b.x) 
@@ -26,7 +39,7 @@
                        (+ frame-b.x frame-b.w)) x)
         h (- (math.max (+ frame-a.y frame-a.h) 
                        (+ frame-b.y frame-b.h)) y)]
-    {: x : y : w : h}))
+    (hs.geometry.rect x y w h)))
 
 (lambda frame-comperator [frame-a frame-b]
   "Comperator function used to sort frames based on x than y."
@@ -39,31 +52,35 @@
     then calls frame-comperator"
   (frame-comperator (a:frame) (b:frame)))
 
-(lambda f-mostly-in-x [innie outie]
-  "Checks if THRES_INSIDE percent of the innie 
-    is in the outie in the X-axis"
-  (let [intersection (innie:intersect outie)]
-    (>= intersection.w (* innie.w THRES_INSIDE))))
+(lambda f-intersection-x [a b]
+  (let [intersection (a:intersect b)]
+    intersection.w))
 
-(lambda f-mostly-in-y [innie outie]
-  "Checks if THRES_INSIDE percent of the innie 
-    is in the outie in the Y-axis"
-  (let [intersection (innie:intersect outie)]
-    (>= intersection.h (* innie.h THRES_INSIDE))))
+(lambda f-intersection-y [a b]
+  (let [intersection (a:intersect b)]
+    intersection.h))
 
-(lambda f-mostly-in [innie outie]
-  "Checks if THRESHOLD percent of the innie 
-    is in the outie in both axis"
-  (and (f-mostly-in-x innie outie)
-       (f-mostly-in-y innie outie)))
+(lambda f-intersect-x? [a b]
+  (>= (f-intersection-x a b) THRES_INTER))
 
-(lambda f-interection [f1 f2]
-  (let [intersection (f1:intersect f2)
-        i-area       (* intersection.h intersection.w)
-        f1-area      (* f1.h f1.w)
-        f2-area      (* f2.h f2.w)]
-    (or (>= i-area (* f1-area THRES_INTER))
-        (>= i-area (* f2-area THRES_INTER)))))
+(lambda f-intersect-y? [a b]
+  (>= (f-intersection-y a b) THRES_INTER))
+
+(lambda f-intersect? [a b]
+  (and (f-intersect-x? a b)
+       (f-intersect-y? a b)))
+
+(lambda f-mostly-in-x? [innie outie]
+  (>= (f-intersection-x innie outie)
+      (* innie.w THRES_INSIDE)))
+
+(lambda f-mostly-in-y? [innie outie]
+  (>= (f-intersection-y innie outie)
+      (* innie.h THRES_INSIDE)))
+
+(lambda f-mostly-in? [innie outie]
+  (and (f-mostly-in-x? innie outie)
+       (f-mostly-in-y? innie outie)))
 
 (lambda get-screens [] 
   "Gets screens"
@@ -74,15 +91,19 @@
   (sort (get-screens) comperator-by-frames))
 
 (lambda get-screen-of [win] 
-  "Gets screen of window based on f-mostly-in function"
+  "Gets screen of window based on `f-mostly-in?` function"
   (first (get-screens) 
-         #(f-mostly-in (win:frame) ($2:frame))))
+         #(f-mostly-in? (frame-of win) ($1:frame))))
 
 (lambda is-valid-window [win]
   "Returns true if window is relevant"
   (and (win:isStandard)
        (not (win:isMinimized))
        (get-screen-of win)))
+
+(lambda get-active-window [] 
+  "Returns active window"
+  (hs.window.focusedWindow))
 
 (lambda get-windows []
   "Returns list of windows filtered with is-valid-window"
@@ -94,33 +115,43 @@
   "Returns list of windows sorted on comperator-by-frames"
   (sort (get-windows) comperator-by-frames))
 
+(lambda merge-frames [frames cond]
+  (let [output []]
+    (each [_ frame (ipairs frames)]
+      (let [?matched (first output #(cond frame $1))]
+        (if ?matched 
+            (let [merged (f-merge frame ?matched)]
+                (set ?matched.x merged.x)
+                (set ?matched.y merged.y)
+                (set ?matched.w merged.w)
+                (set ?matched.h merged.h))
+            (table.insert output frame))))
+    output))
+
 (lambda get-groups []
-  "Returns list of group frames"
-  (let [windows (get-windows)
-        groups  []]
-    (each [_ win (ipairs windows)]
-      (let [?gr (first groups #(f-interection (win:frame) $2))]
-        (if ?gr 
-            (let [merged (f-merge (win:frame) ?gr)]
-                (set ?gr.x merged.x)
-                (set ?gr.y merged.y)
-                (set ?gr.w merged.w)
-                (set ?gr.h merged.h))
-            (table.insert groups (win:frame)))))
-    groups))
+  (merge-frames (map (get-windows) #($1:frame)) 
+                #(f-intersect? $1 $2)))
+
+(lambda get-columns []
+  (merge-frames (get-groups) 
+                #(let [screen-1 (get-screen-of $1)
+                       screen-2 (get-screen-of $2)] 
+                   (and (f-intersect-x? $1 $2) 
+                        (= (screen-1:id) (screen-2:id))))))
 
 ;; testing stuff here
 (lambda test []
   (let [screens (get-screens-sorted)
         windows (get-windows-sorted)
-        groups  (get-groups)]
+        groups  (get-groups)
+        columns  (get-columns)]
     (dbg.inspect (collect [_ scr (ipairs screens)] 
       (values 
         (scr:name)
         (icollect [_ win (ipairs windows)]
-          (if (f-mostly-in (win:frame) (scr:frame))
+          (if (f-mostly-in? (win:frame) (scr:frame))
               (win:title))))))
-    (each [i gr (ipairs groups)]
+    (each [i gr (ipairs columns)]
           (dbg.show-border 
             (dbg.create-border gr)))))
 
