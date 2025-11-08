@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
+set -e
 fennel --require-as-include --compile init.fnl > init.lua
 hs -c 'hs.reload()' 2> /dev/null
