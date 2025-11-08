@@ -132,12 +132,18 @@
   (merge-frames (map (get-windows) #($1:frame)) 
                 #(f-intersect? $1 $2)))
 
+(lambda get-groups-sorted []
+  (sort (get-groups) frame-comperator))
+
 (lambda get-columns []
   (merge-frames (get-groups) 
                 #(let [screen-1 (get-screen-of $1)
                        screen-2 (get-screen-of $2)] 
                    (and (f-intersect-x? $1 $2) 
                         (= (screen-1:id) (screen-2:id))))))
+
+(lambda get-columns-sorted []
+  (sort (get-columns) frame-comperator))
 
 ;; testing stuff here
 (lambda test []
@@ -151,7 +157,7 @@
         (icollect [_ win (ipairs windows)]
           (if (f-mostly-in? (win:frame) (scr:frame))
               (win:title))))))
-    (each [i gr (ipairs columns)]
+    (each [i gr (ipairs groups)]
           (dbg.show-border 
             (dbg.create-border gr)))))
 
