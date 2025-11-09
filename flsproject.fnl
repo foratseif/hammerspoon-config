@@ -1,3 +1,3 @@
 {:extra-globals "hs"
- :lints {:unused-definition true}}
+ :lints {:unused-definition false}}
 
