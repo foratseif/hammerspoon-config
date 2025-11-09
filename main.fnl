@@ -317,7 +317,11 @@
       [:down]  (set frame.y (+ frame.y MOVE_STEP))
       [:left]  (set frame.x (- frame.x MOVE_STEP))
       [:right] (set frame.x (+ frame.x MOVE_STEP)))
-    (set-win-frame win (frame:intersect limits))))
+    (set frame.x (math.max frame.x limits.x))
+    (set frame.y (math.max frame.y limits.y))
+    (set frame.x (math.min frame.x (- limits.x2 frame.w)))
+    (set frame.y (math.min frame.y (- limits.y2 frame.h)))
+    (set-win-frame win frame)))
 
 (lambda cmd-resize-window [command]
   (let [win     (get-active-window)
