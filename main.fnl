@@ -22,6 +22,14 @@
       (or ret 
           (if (cond v i) i nil)))))
 
+(lambda round-to-decimal [num ?decimals]
+  (let [factor (^ 10 (or ?decimals 2))]
+    (/ (math.floor (* num factor)) factor)))
+
+(lambda eq-decimal? [num1 num2 ?decimals] 
+  (= (round-to-decimal num1 ?decimals)
+     (round-to-decimal num2 ?decimals)))
+
 (lambda index-of-window [windows win]
   (index-of windows #(= ($1:id) (win:id))))
 
@@ -63,10 +71,11 @@
                     :x2 (math.max frame-a.x2 frame-b.x2)
                     :y2 (math.max frame-a.y2 frame-b.y2)}))
 
-(lambda merge-frames [frames cond]
+(lambda merge-frames [things cond]
   (let [output []]
-    (each [_ frame (ipairs frames)]
-      (let [?matched (first output #(cond frame $1))]
+    (each [_ thing (ipairs things)]
+      (let [frame (frame-of thing)
+            ?matched (first output #(cond frame $1))]
         (if ?matched 
             (let [merged (f-merge frame ?matched)]
                 (set ?matched.x merged.x)
@@ -130,7 +139,22 @@
   (first (hs.window.orderedWindows) #(f-mostly-in? $1 frame)))
 
 (lambda set-win-frame [win {: x : y : w : h}]
-  (win:setFrame (hs.geometry.new x y w h) 0))
+  "Sets the window frame and tries to recover if 
+    the window has a set aspect ratio"
+  (let [bef-frame (win:frame)
+        new-frame (hs.geometry.new x y w h)]
+    (win:setFrame new-frame 0)
+    (let [aft-frame (win:frame)
+          fix-frame (hs.geometry.new bef-frame)]
+        (if (eq-decimal? bef-frame.aspect 
+                         aft-frame.aspect)
+            (do 
+              (if (< new-frame.h new-frame.w)
+                (fix-frame:scale (/ new-frame.h fix-frame.h))
+                (fix-frame:scale (/ new-frame.w fix-frame.w)))
+              (set fix-frame.x x)
+              (set fix-frame.y y)
+              (win:setFrame fix-frame 0))))))
 
 (lambda get-screens [] 
   "Gets screens"
@@ -175,8 +199,7 @@
         comperator-by-frames))
 
 (lambda get-groups []
-  (merge-frames (map (get-windows) #($1:frame)) 
-                #(f-intersect? $1 $2)))
+  (merge-frames (get-windows) #(f-intersect? $1 $2)))
 
 (lambda get-groups-sorted []
   (sort (get-groups) frame-comperator))
