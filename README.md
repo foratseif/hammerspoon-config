@@ -15,6 +15,6 @@ Fennel code, compiles to lua.
 
 
 #### TODO:
-[ ] Move window from one group to another (including empty spaces)
-[ ] Have more columns that shows on screen. So that i can roll through columns.
-[ ] Organize columns on the available screens when screens changes.
+- [ ] Move window from one group to another (including empty spaces)
+- [ ] Have more columns that shows on screen. So that i can roll through columns.
+- [ ] Organize columns on the available screens when screens changes.
