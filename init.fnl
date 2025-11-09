@@ -189,15 +189,23 @@
   "Returns active screen"
   (get-group-of (hs.window.focusedWindow)))
 
-(lambda get-columns []
-  (merge-frames (get-groups) 
+(lambda get-columns-sorted []
+  (merge-frames (get-groups-sorted)
                 #(let [screen-1 (get-screen-of $1)
                        screen-2 (get-screen-of $2)] 
                    (and (f-intersect-x? $1 $2) 
                         (= (screen-1:id) (screen-2:id))))))
 
-(lambda get-columns-sorted []
-  (sort (get-columns) frame-comperator))
+;(lambda get-columns-sorted []
+;  (sort (get-columns) frame-comperator))
+
+(lambda get-column-of [win]
+  (first (get-columns-sorted)
+         #(f-mostly-in? (frame-of win) $1)))
+
+(lambda get-active-column []
+  "Returns active screen"
+  (get-column-of (hs.window.focusedWindow)))
 
 ;; actual functions
 (lambda cmd-focus-window [direction]
@@ -219,6 +227,16 @@
                 next-idx (+ (% (+ curr-idx -1 step) (length groups)) 1)
                 next-grp (. groups next-idx)]
             (focus-window (top-window-in next-grp))))))
+
+(lambda cmd-focus-column [direction]
+    (let [columns  (get-columns-sorted)
+          curr-col (get-active-column)
+          curr-idx (index-of columns #(same-frame? $1 curr-col))]
+      (if curr-idx
+          (let [step (case [direction] [:next] 1 [:prev] -1)
+                next-idx (+ (% (+ curr-idx -1 step) (length columns)) 1)
+                next-col (. columns next-idx)]
+            (focus-window (top-window-in next-col))))))
 
 (lambda cmd-stack-group [] 
   (let [group   (get-active-group)
@@ -273,16 +291,18 @@
   (let [screens (get-screens-sorted)
         windows (get-windows-sorted)
         groups  (get-groups)
-        columns  (get-columns)]
+        columns  (get-columns-sorted)]
     (dbg.inspect (collect [_ scr (ipairs screens)] 
       (values 
         (scr:name)
         (icollect [_ win (ipairs windows)]
           (if (f-mostly-in? (win:frame) (scr:frame))
               (win:title))))))
-    (each [i gr (ipairs groups)]
+    (each [i fr (ipairs columns)]
           (dbg.show-border 
-            (dbg.create-border gr)))
+            (dbg.create-border fr (if (same-frame? fr (get-column-of (get-active-window)))
+                                      :red
+                                      :blue))))
     (each [i screen (ipairs screens)]
       (print (.. (screen:name) " " (let [size (screen:frame)] 
                                      (.. "(" size.w "x" size.h ")")))))
@@ -293,7 +313,7 @@
 (hs.hotkey.bind [:shift :ctrl] :R dbg.clear-borders)
 (hs.hotkey.bind [:shift :ctrl] :J #(cmd-focus-window :next))
 (hs.hotkey.bind [:shift :ctrl] :K #(cmd-focus-window :prev))
-(hs.hotkey.bind [:shift :ctrl] :L #(cmd-focus-group :next))
-(hs.hotkey.bind [:shift :ctrl] :H #(cmd-focus-group :prev))
+(hs.hotkey.bind [:shift :ctrl] :L #(cmd-focus-column :next))
+(hs.hotkey.bind [:shift :ctrl] :H #(cmd-focus-column :prev))
 (hs.hotkey.bind [:shift :ctrl] :S cmd-stack-group)
 (hs.hotkey.bind [:shift :ctrl] :E cmd-expand-group)

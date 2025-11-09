@@ -51,9 +51,9 @@
 (lambda create-and-show-border [?color rect]
   (show-border (create-border rect ?color)))
 
-(lambda inspect [thing] 
+(lambda inspect [thing ?key]
   "Converts variable to string and prints it"
-  (print (to-str thing)))
+  (print (to-str thing ?key)))
 
 {: inspect 
  : to-str
