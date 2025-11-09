@@ -48,6 +48,9 @@
         _ {:red 1 :green 0 :blue 1 :alpha 1}))
     border))
 
+(lambda create-and-show-border [?color rect]
+  (show-border (create-border rect ?color)))
+
 (lambda inspect [thing] 
   "Converts variable to string and prints it"
   (print (to-str thing)))
@@ -56,4 +59,5 @@
  : to-str
  : create-border
  : show-border
- : clear-borders}
+ : clear-borders
+ : create-and-show-border}

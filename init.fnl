@@ -5,6 +5,7 @@
 (local THRES_INSIDE 0.55)
 (local THRES_INTER 75)
 (local STACK_STEP 15)
+(local PADDING 15)
 
 (lambda first [tbl ?cond]
   "Returns the first element in the table that returns
@@ -43,14 +44,24 @@
         frame-func (?. metatable :frame)]
     (if frame-func (thing:frame) thing)))
 
+(lambda pad-frame [rect ?padding]
+  (let [padding (or ?padding PADDING)]
+    (hs.geometry.rect {:x (+ rect.x padding)
+                       :y (+ rect.y padding)
+                       :x2 (- rect.x2 padding)
+                       :y2 (- rect.y2 padding)})))
+
+(lambda same-frame? [a b]
+  (and (= a.x b.x)
+       (= a.y b.y)
+       (= a.w b.w)
+       (= a.h b.h)))
+
 (lambda f-merge [frame-a frame-b] 
-  (let [x (math.min frame-a.x frame-b.x) 
-        y (math.min frame-a.y frame-b.y)
-        w (- (math.max (+ frame-a.x frame-a.w) 
-                       (+ frame-b.x frame-b.w)) x)
-        h (- (math.max (+ frame-a.y frame-a.h) 
-                       (+ frame-b.y frame-b.h)) y)]
-    (hs.geometry.new x y w h)))
+  (hs.geometry.new {:x (math.min frame-a.x frame-b.x)
+                    :y (math.min frame-a.y frame-b.y)
+                    :x2 (math.max frame-a.x2 frame-b.x2)
+                    :y2 (math.max frame-a.y2 frame-b.y2)}))
 
 (lambda merge-frames [frames cond]
   (let [output []]
@@ -77,11 +88,15 @@
   (frame-comperator (frame-of a) (frame-of b)))
 
 (lambda f-intersection-x [a b]
-  (let [intersection (a:intersect b)]
+  (let [frame-a      (frame-of a)
+        frame-b      (frame-of b)
+        intersection (frame-a:intersect frame-b)]
     intersection.w))
 
 (lambda f-intersection-y [a b]
-  (let [intersection (a:intersect b)]
+  (let [frame-a      (frame-of a)
+        frame-b      (frame-of b)
+        intersection (frame-a:intersect frame-b)]
     intersection.h))
 
 (lambda f-intersect-x? [a b]
@@ -95,16 +110,24 @@
        (f-intersect-y? a b)))
 
 (lambda f-mostly-in-x? [innie outie]
-  (>= (f-intersection-x innie outie)
-      (* innie.w THRES_INSIDE)))
+  (let [innie (frame-of innie)]
+    (>= (f-intersection-x innie outie)
+        (* innie.w THRES_INSIDE))))
 
 (lambda f-mostly-in-y? [innie outie]
-  (>= (f-intersection-y innie outie)
-      (* innie.h THRES_INSIDE)))
+  (let [innie (frame-of innie)]
+    (>= (f-intersection-y innie outie)
+        (* innie.h THRES_INSIDE))))
 
 (lambda f-mostly-in? [innie outie]
   (and (f-mostly-in-x? innie outie)
        (f-mostly-in-y? innie outie)))
+
+(lambda focus-window [win] 
+  (if win (win:focus)))
+
+(lambda top-window-in [frame] 
+  (first (hs.window.orderedWindows) #(f-mostly-in? $1 frame)))
 
 (lambda set-win-frame [win {: x : y : w : h}]
   (win:setFrame (hs.geometry.new x y w h) 0))
@@ -185,7 +208,17 @@
           (let [step (case [direction] [:next] 1 [:prev] -1)
                 next-idx (+ (% (+ curr-idx -1 step) (length windows)) 1)
                 next-win (. windows next-idx)]
-            (next-win:focus)))))
+            (focus-window next-win)))))
+
+(lambda cmd-focus-group [direction]
+    (let [groups   (get-groups-sorted)
+          curr-grp (get-active-group)
+          curr-idx (index-of groups #(same-frame? $1 curr-grp))]
+      (if curr-idx
+          (let [step (case [direction] [:next] 1 [:prev] -1)
+                next-idx (+ (% (+ curr-idx -1 step) (length groups)) 1)
+                next-grp (. groups next-idx)]
+            (focus-window (top-window-in next-grp))))))
 
 (lambda cmd-stack-group [] 
   (let [group   (get-active-group)
@@ -198,11 +231,42 @@
             h (- group.h (* STACK_STEP (- amount 1)))]
         (set-win-frame win {: x : y : h : w})))))
 
-(lambda cmd-focus-stack [] nil)
+(lambda cmd-expand-group [] 
+  (let [group-frame   (get-active-group)
+        screen-frame  (frame-of (get-active-screen))
+        innie-windows (filter (get-windows-inside screen-frame)
+                              #(f-mostly-in? $1 group-frame))
+        outie-windows (filter (get-windows-inside screen-frame)
+                              #(not (f-mostly-in? $1 group-frame)))]
+    (var expanded 
+      (accumulate [expanded screen-frame _ win (ipairs outie-windows)]
+        (let [win-frame (win:frame)]
+          (hs.geometry.new {:x (if (< win-frame.x2 group-frame.x) 
+                                   (math.max win-frame.x2 expanded.x)
+                                   expanded.x)
+                            :y (if (< win-frame.y2 group-frame.y) 
+                                   (math.max win-frame.y2 expanded.y)
+                                   expanded.y)
+                            :x2 (if (> win-frame.x group-frame.x2) 
+                                    (math.min win-frame.x expanded.x2)
+                                    expanded.x2)
+                            :y2 (if (> win-frame.y group-frame.y2) 
+                                    (math.min win-frame.y expanded.y2)
+                                    expanded.y2)}))))
+    (set expanded (pad-frame expanded))
+    (each [_ win (ipairs innie-windows)] 
+      (let [win-frame (win:frame)]
+        (set-win-frame win 
+          (hs.geometry.new {:x (+ expanded.x (- win-frame.x group-frame.x))
+                            :y (+ expanded.y (- win-frame.y group-frame.y))
+                            :x2 (- expanded.x2 (- group-frame.x2 win-frame.x2))
+                            :y2 (- expanded.y2 (- group-frame.y2 win-frame.y2))}))))))
+
+
 (lambda cmd-move-window [] nil)
+(lambda cmd-carve-window [] nil)
 (lambda cmd-resize-window [] nil)
 (lambda cmd-migrate-window [] nil)
-(lambda cmd-expand-group [] nil)
 
 ;; testing stuff here
 (lambda test []
@@ -229,4 +293,7 @@
 (hs.hotkey.bind [:shift :ctrl] :R dbg.clear-borders)
 (hs.hotkey.bind [:shift :ctrl] :J #(cmd-focus-window :next))
 (hs.hotkey.bind [:shift :ctrl] :K #(cmd-focus-window :prev))
+(hs.hotkey.bind [:shift :ctrl] :L #(cmd-focus-group :next))
+(hs.hotkey.bind [:shift :ctrl] :H #(cmd-focus-group :prev))
 (hs.hotkey.bind [:shift :ctrl] :S cmd-stack-group)
+(hs.hotkey.bind [:shift :ctrl] :E cmd-expand-group)
