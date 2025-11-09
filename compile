@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Run the folling in neovim to auto compile on save
-# :autocmd BufWritePost init.fnl !./compile
+# :autocmd BufWritePost main.fnl !./compile
 
 set -e
 fennel --require-as-include --compile main.fnl > init.lua
