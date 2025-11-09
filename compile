@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+# Run the folling in neovim to auto compile on save
+# :autocmd BufWritePost init.fnl !./compile
+
 set -e
 fennel --require-as-include --compile main.fnl > init.lua
 hs -c 'hs.reload()' 2> /dev/null
+
+
+
