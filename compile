@@ -5,6 +5,3 @@
 set -e
 fennel --require-as-include --compile main.fnl > init.lua
 hs -c 'hs.reload()' 2> /dev/null
-
-
-
