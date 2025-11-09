@@ -196,9 +196,6 @@
                    (and (f-intersect-x? $1 $2) 
                         (= (screen-1:id) (screen-2:id))))))
 
-;(lambda get-columns-sorted []
-;  (sort (get-columns) frame-comperator))
-
 (lambda get-column-of [win]
   (first (get-columns-sorted)
          #(f-mostly-in? (frame-of win) $1)))
