@@ -4,7 +4,7 @@ Fennel code, compiles to lua.
 
 #### Terminoligy:
 - **Group:** Group of windows that overlap. Single window is also a group.
-- **Column:** Group of windows that overlap on x-axis.
+- **Column:** Group of windows that overlap on x-axis within a screen.
 
 #### Functionality:
 - **Move window**
