@@ -370,6 +370,9 @@
 
 (hs.hotkey.bind [:shift :ctrl] :D test)
 (hs.hotkey.bind [:shift :ctrl] :R dbg.clear-borders)
+
+(hs.hotkey.bind [:cmd] :H #nil)
+
 (hs.hotkey.bind [:shift :ctrl] :J #(cmd-focus-window :next))
 (hs.hotkey.bind [:shift :ctrl] :K #(cmd-focus-window :prev))
 (hs.hotkey.bind [:shift :ctrl] :L #(cmd-focus-column :next))
