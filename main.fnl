@@ -239,7 +239,7 @@
           curr-win (get-active-window)
           curr-idx (index-of-window windows curr-win)]
       (if curr-idx
-          (let [step (case [direction] [:next] 1 [:prev] -1)
+          (let [step (case direction :next 1 :prev -1)
                 next-idx (+ (% (+ curr-idx -1 step) (length windows)) 1)
                 next-win (. windows next-idx)]
             (focus-window next-win)))))
@@ -249,7 +249,7 @@
           curr-grp (get-active-group)
           curr-idx (index-of groups #(same-frame? $1 curr-grp))]
       (if curr-idx
-          (let [step (case [direction] [:next] 1 [:prev] -1)
+          (let [step (case direction :next 1 :prev -1)
                 next-idx (+ (% (+ curr-idx -1 step) (length groups)) 1)
                 next-grp (. groups next-idx)]
             (focus-window (top-window-in next-grp))))))
@@ -259,7 +259,7 @@
           curr-col (get-active-column)
           curr-idx (index-of columns #(same-frame? $1 curr-col))]
       (if curr-idx
-          (let [step (case [direction] [:next] 1 [:prev] -1)
+          (let [step (case direction :next 1 :prev -1)
                 next-idx (+ (% (+ curr-idx -1 step) (length columns)) 1)
                 next-col (. columns next-idx)]
             (focus-window (top-window-in next-col))))))
@@ -312,11 +312,11 @@
         screen  (get-active-screen)
         frame   (win:frame)
         limits  (pad-frame (screen:frame))]
-    (case [direction]
-      [:up]    (set frame.y (- frame.y MOVE_STEP))
-      [:down]  (set frame.y (+ frame.y MOVE_STEP))
-      [:left]  (set frame.x (- frame.x MOVE_STEP))
-      [:right] (set frame.x (+ frame.x MOVE_STEP)))
+    (case direction
+      :up    (set frame.y (- frame.y MOVE_STEP))
+      :down  (set frame.y (+ frame.y MOVE_STEP))
+      :left  (set frame.x (- frame.x MOVE_STEP))
+      :right (set frame.x (+ frame.x MOVE_STEP)))
     (set frame.x (math.max frame.x limits.x))
     (set frame.y (math.max frame.y limits.y))
     (set frame.x (math.min frame.x (- limits.x2 frame.w)))
@@ -329,15 +329,15 @@
         frame   (win:frame)
         limits  (pad-frame (screen:frame))
         center  frame.center]
-    (case [command]
-      [:both-up]   (do (set frame.w (+ frame.w SCALE_STEP))
+    (case command
+      :both-up   (do (set frame.w (+ frame.w SCALE_STEP))
                        (set frame.h (+ frame.h SCALE_STEP)))
-      [:both-down] (do (set frame.w (- frame.w SCALE_STEP))
+      :both-down (do (set frame.w (- frame.w SCALE_STEP))
                        (set frame.h (- frame.h SCALE_STEP)))
-      [:horz-up]   (set frame.w (+ frame.w SCALE_STEP))
-      [:horz-down] (set frame.w (- frame.w SCALE_STEP))
-      [:vert-up]   (set frame.h (+ frame.h SCALE_STEP))
-      [:vert-down] (set frame.h (- frame.h SCALE_STEP)))
+      :horz-up   (set frame.w (+ frame.w SCALE_STEP))
+      :horz-down (set frame.w (- frame.w SCALE_STEP))
+      :vert-up   (set frame.h (+ frame.h SCALE_STEP))
+      :vert-down (set frame.h (- frame.h SCALE_STEP)))
     (set frame.x (- center.x (/ frame.w 2)))
     (set frame.y (- center.y (/ frame.h 2)))
     (set-win-frame win (frame:intersect limits))))
