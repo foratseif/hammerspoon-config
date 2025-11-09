@@ -1,6 +1,6 @@
 -- Configuration
 local borderColor = {red=0.7, green=0.7, blue=0.7, alpha=0.8}
-local borderWidth = 4
+local borderWidth = 2
 
 -- Global variable to store the border
 local focusBorder = nil
@@ -15,7 +15,7 @@ end
 
 -- Function to draw the border
 local function drawBorder()
-    local offset = 2
+    local offset = 1
     local win = hs.window.focusedWindow()
 
     deleteBorder()

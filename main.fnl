@@ -372,16 +372,17 @@
 (hs.hotkey.bind [:shift :ctrl] :R dbg.clear-borders)
 
 (hs.hotkey.bind [:cmd] :H #nil)
+(hs.hotkey.bind [:ctrl] :up #nil)
 
 (hs.hotkey.bind [:shift :ctrl] :J #(cmd-focus-window :next))
 (hs.hotkey.bind [:shift :ctrl] :K #(cmd-focus-window :prev))
 (hs.hotkey.bind [:shift :ctrl] :L #(cmd-focus-column :next))
 (hs.hotkey.bind [:shift :ctrl] :H #(cmd-focus-column :prev))
 
-(hs.hotkey.bind [:shift :ctrl] :S cmd-stack-group)
-(hs.hotkey.bind [:shift :ctrl] :E cmd-expand-group)
-(hs.hotkey.bind [:shift :ctrl :cmd] :S cmd-stack-group)
-(hs.hotkey.bind [:shift :ctrl :cmd] :E cmd-expand-group)
+(hs.hotkey.bind [:shift :ctrl] :S #(update-border-after cmd-stack-group))
+(hs.hotkey.bind [:shift :ctrl] :E #(update-border-after cmd-expand-group))
+(hs.hotkey.bind [:shift :ctrl :cmd] :S #(update-border-after cmd-stack-group))
+(hs.hotkey.bind [:shift :ctrl :cmd] :E #(update-border-after cmd-expand-group))
 
 (hs.hotkey.bind [:shift :ctrl :cmd] :H #(update-border-after #(cmd-move-window :left)))
 (hs.hotkey.bind [:shift :ctrl :cmd] :J #(update-border-after #(cmd-move-window :down)))
