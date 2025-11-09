@@ -21,6 +21,9 @@
       (or ret 
           (if (cond v i) i nil)))))
 
+(lambda index-of-window [windows win]
+  (index-of windows #(= ($1:id) (win:id))))
+
 (lambda map [tbl mapper]
   "Maps sequential table"
   (icollect [i v (ipairs tbl)] (mapper v i)))
@@ -177,7 +180,7 @@
 (lambda cmd-focus-window [direction]
     (let [windows  (get-windows-inside (get-active-screen))
           curr-win (get-active-window)
-          curr-idx (index-of windows #(= ($1:id) (curr-win:id)))]
+          curr-idx (index-of-window windows curr-win)]
       (if curr-idx
           (let [step (case [direction] [:next] 1 [:prev] -1)
                 next-idx (+ (% (+ curr-idx -1 step) (length windows)) 1)
