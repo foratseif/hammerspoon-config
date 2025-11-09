@@ -56,3 +56,7 @@ windowFilter:subscribe(hs.window.filter.windowHidden, deleteBorder)
 windowFilter:subscribe(hs.window.filter.windowUnminimized, drawBorder)
 windowFilter:subscribe(hs.window.filter.windowUnhidden, drawBorder)
 windowFilter:subscribe(hs.window.filter.windowMoved, drawBorder)
+
+return {
+  drawBorder = drawBorder
+}

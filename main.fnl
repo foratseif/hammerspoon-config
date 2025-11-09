@@ -1,11 +1,17 @@
-(local dbg (require :dbg))
 (require :boring)
-(require :border)
+(local dbg (require :dbg))
+(local border (require :border))
 
 (local THRES_INSIDE 0.55)
 (local THRES_INTER 75)
 (local STACK_STEP 15)
 (local PADDING 15)
+(local MOVE_STEP 150)
+(local SCALE_STEP 150)
+
+(lambda update-border-after [func]
+  (func)
+  (border.drawBorder))
 
 (lambda first [tbl ?cond]
   "Returns the first element in the table that returns
@@ -305,9 +311,38 @@
                             :y2 (- expanded.y2 (- group-frame.y2 win-frame.y2))}))))))
 
 
-(lambda cmd-move-window [] nil)
+(lambda cmd-move-window [direction] 
+  (let [win     (get-active-window)
+        screen  (get-active-screen)
+        frame   (win:frame)
+        limits  (pad-frame (screen:frame))]
+    (case [direction]
+      [:up]    (set frame.y (- frame.y MOVE_STEP))
+      [:down]  (set frame.y (+ frame.y MOVE_STEP))
+      [:left]  (set frame.x (- frame.x MOVE_STEP))
+      [:right] (set frame.x (+ frame.x MOVE_STEP)))
+    (set-win-frame win (frame:intersect limits))))
+
+(lambda cmd-resize-window [command]
+  (let [win     (get-active-window)
+        screen  (get-active-screen)
+        frame   (win:frame)
+        limits  (pad-frame (screen:frame))
+        center  frame.center]
+    (case [command]
+      [:both-up]   (do (set frame.w (+ frame.w SCALE_STEP))
+                       (set frame.h (+ frame.h SCALE_STEP)))
+      [:both-down] (do (set frame.w (- frame.w SCALE_STEP))
+                       (set frame.h (- frame.h SCALE_STEP)))
+      [:horz-up]   (set frame.w (+ frame.w SCALE_STEP))
+      [:horz-down] (set frame.w (- frame.w SCALE_STEP))
+      [:vert-up]   (set frame.h (+ frame.h SCALE_STEP))
+      [:vert-down] (set frame.h (- frame.h SCALE_STEP)))
+    (set frame.x (- center.x (/ frame.w 2)))
+    (set frame.y (- center.y (/ frame.h 2)))
+    (set-win-frame win (frame:intersect limits))))
+
 (lambda cmd-carve-window [] nil)
-(lambda cmd-resize-window [] nil)
 (lambda cmd-migrate-window [] nil)
 
 ;; testing stuff here
@@ -339,5 +374,20 @@
 (hs.hotkey.bind [:shift :ctrl] :K #(cmd-focus-window :prev))
 (hs.hotkey.bind [:shift :ctrl] :L #(cmd-focus-column :next))
 (hs.hotkey.bind [:shift :ctrl] :H #(cmd-focus-column :prev))
+
 (hs.hotkey.bind [:shift :ctrl] :S cmd-stack-group)
 (hs.hotkey.bind [:shift :ctrl] :E cmd-expand-group)
+(hs.hotkey.bind [:shift :ctrl :cmd] :S cmd-stack-group)
+(hs.hotkey.bind [:shift :ctrl :cmd] :E cmd-expand-group)
+
+(hs.hotkey.bind [:shift :ctrl :cmd] :H #(update-border-after #(cmd-move-window :left)))
+(hs.hotkey.bind [:shift :ctrl :cmd] :J #(update-border-after #(cmd-move-window :down)))
+(hs.hotkey.bind [:shift :ctrl :cmd] :K #(update-border-after #(cmd-move-window :up)))
+(hs.hotkey.bind [:shift :ctrl :cmd] :L #(update-border-after #(cmd-move-window :right)))
+
+(hs.hotkey.bind [:shift :ctrl :cmd] :+ #(update-border-after #(cmd-resize-window :both-up)))
+(hs.hotkey.bind [:shift :ctrl :cmd] :- #(update-border-after #(cmd-resize-window :both-down)))
+(hs.hotkey.bind [:shift :ctrl :cmd] :Y #(update-border-after #(cmd-resize-window :horz-down)))
+(hs.hotkey.bind [:shift :ctrl :cmd] :U #(update-border-after #(cmd-resize-window :vert-down)))
+(hs.hotkey.bind [:shift :ctrl :cmd] :I #(update-border-after #(cmd-resize-window :vert-up)))
+(hs.hotkey.bind [:shift :ctrl :cmd] :O #(update-border-after #(cmd-resize-window :horz-up)))
