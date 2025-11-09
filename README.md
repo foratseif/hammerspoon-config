@@ -3,15 +3,15 @@
 Fennel code, compiles to lua.
 
 #### Terminoligy:
-- *Group:* Group of windows that overlap. Single window is also a group.
-- *Column:* Group of windows that overlap on x-axis.
+- **Group:** Group of windows that overlap. Single window is also a group.
+- **Column:** Group of windows that overlap on x-axis.
 
 #### Functionality:
-- *Move window*
-- *Resize window*
-- *Expand group:* Expands a group to fill up the available space.
-- *Stack group:* Stacks windows in a group inside the size of the group.
-- *Border:* Border around focused window.
+- **Move window**
+- **Resize window**
+- **Expand group:** Expands a group to fill up the available space.
+- **Stack group:** Stacks windows in a group inside the size of the group.
+- **Border:** Border around focused window.
 
 
 #### TODO:
