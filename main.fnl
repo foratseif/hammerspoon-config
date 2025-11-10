@@ -233,6 +233,32 @@
   "Returns active screen"
   (get-column-of (hs.window.focusedWindow)))
 
+(lambda expand-frame [frame limit-frame]
+  (let [outie-windows (filter (get-windows-inside limit-frame)
+                              #(not (f-mostly-in? $1 frame)))]
+    (accumulate [expanded (frame-of limit-frame) _ win (ipairs outie-windows)]
+        (let [win-frame (win:frame)]
+          (hs.geometry.new {:x (if (< win-frame.x2 frame.x)
+                                   (math.max win-frame.x2 expanded.x)
+                                   expanded.x)
+                            :y (if (< win-frame.y2 frame.y)
+                                   (math.max win-frame.y2 expanded.y)
+                                   expanded.y)
+                            :x2 (if (> win-frame.x frame.x2)
+                                    (math.min win-frame.x expanded.x2)
+                                    expanded.x2)
+                            :y2 (if (> win-frame.y frame.y2)
+                                    (math.min win-frame.y expanded.y2)
+                                    expanded.y2)})))))
+
+(lambda stack-windows [windows frame]
+  (each [i win (ipairs windows)]
+    (let [x (+ frame.x (* STACK_STEP (- i 1)))
+          y (+ frame.y (* STACK_STEP (- i 1)))
+          w (- frame.w (* STACK_STEP (- (length windows) 1)))
+          h (- frame.h (* STACK_STEP (- (length windows) 1)))]
+      (set-win-frame win {: x : y : h : w}))))
+
 ;; actual functions
 (lambda cmd-focus-window [direction]
     (let [windows  (get-windows-inside (get-active-screen))
@@ -266,38 +292,15 @@
 
 (lambda cmd-stack-group [] 
   (let [group   (get-active-group)
-        windows (get-windows-inside group)
-        amount  (length windows)]
-    (each [i win (ipairs windows)] 
-      (let [x (+ group.x (* STACK_STEP (- i 1)))
-            y (+ group.y (* STACK_STEP (- i 1)))
-            w (- group.w (* STACK_STEP (- amount 1)))
-            h (- group.h (* STACK_STEP (- amount 1)))]
-        (set-win-frame win {: x : y : h : w})))))
+        windows (get-windows-inside group)]
+    (stack-windows windows group)))
 
 (lambda cmd-expand-group [] 
   (let [group-frame   (get-active-group)
         screen-frame  (frame-of (get-active-screen))
+        expanded      (pad-frame (expand-frame group-frame screen-frame))
         innie-windows (filter (get-windows-inside screen-frame)
-                              #(f-mostly-in? $1 group-frame))
-        outie-windows (filter (get-windows-inside screen-frame)
-                              #(not (f-mostly-in? $1 group-frame)))]
-    (var expanded 
-      (accumulate [expanded screen-frame _ win (ipairs outie-windows)]
-        (let [win-frame (win:frame)]
-          (hs.geometry.new {:x (if (< win-frame.x2 group-frame.x) 
-                                   (math.max win-frame.x2 expanded.x)
-                                   expanded.x)
-                            :y (if (< win-frame.y2 group-frame.y) 
-                                   (math.max win-frame.y2 expanded.y)
-                                   expanded.y)
-                            :x2 (if (> win-frame.x group-frame.x2) 
-                                    (math.min win-frame.x expanded.x2)
-                                    expanded.x2)
-                            :y2 (if (> win-frame.y group-frame.y2) 
-                                    (math.min win-frame.y expanded.y2)
-                                    expanded.y2)}))))
-    (set expanded (pad-frame expanded))
+                              #(f-mostly-in? $1 group-frame))]
     (each [_ win (ipairs innie-windows)] 
       (let [win-frame (win:frame)]
         (set-win-frame win 
@@ -342,6 +345,13 @@
     (set frame.y (- center.y (/ frame.h 2)))
     (set-win-frame win (frame:intersect limits))))
 
+(lambda cmd-organize-screen []
+  (let [screen (get-active-screen)
+        groups (filter (get-groups-sorted) #(f-mostly-in? $1 screen))]
+    (each [_ gr (ipairs groups)]
+      (let [expanded (expand-frame gr screen)]
+        (stack-windows (get-windows-inside gr) (pad-frame expanded))))))
+
 (lambda cmd-carve-window [] nil)
 (lambda cmd-migrate-window [] nil)
 
@@ -383,6 +393,7 @@
 
 (hs.hotkey.bind [:shift :ctrl] :S (border.draw-after cmd-stack-group))
 (hs.hotkey.bind [:shift :ctrl] :E (border.draw-after cmd-expand-group))
+(hs.hotkey.bind [:shift :ctrl] :O (border.draw-after #(cmd-organize-screen)))
 (hs.hotkey.bind [:shift :ctrl :cmd] :S (border.draw-after cmd-stack-group))
 (hs.hotkey.bind [:shift :ctrl :cmd] :E (border.draw-after cmd-expand-group))
 
