@@ -49,6 +49,9 @@
     (table.sort sorted comperator)
     sorted))
 
+(lambda do-after [ms callback]
+  (hs.timer.doAfter (/ ms 1000) callback))
+
 (lambda frame-of [thing] 
   (let [metatable  (getmetatable thing)
         frame-func (?. metatable :frame)]
@@ -149,18 +152,16 @@
     the window has a set aspect ratio"
   (let [bef-frame (win:frame)
         new-frame (hs.geometry.new x y w h)]
-    (win:setFrame new-frame 0)
-    (let [aft-frame (win:frame)
-          fix-frame (hs.geometry.new bef-frame)]
-        (if (eq-decimal? bef-frame.aspect 
-                         aft-frame.aspect)
-            (do 
-              (if (< new-frame.h new-frame.w)
-                (fix-frame:scale (/ new-frame.h fix-frame.h))
-                (fix-frame:scale (/ new-frame.w fix-frame.w)))
-              (set fix-frame.x x)
-              (set fix-frame.y y)
-              (win:setFrame fix-frame 0))))))
+    (win:setFrame new-frame 0)))
+
+;(do-after 1000
+;      #(let [aft-frame (win:frame)]
+;        (if (eq-decimal? bef-frame.aspect aft-frame.aspect)
+;          (let [aspect    bef-frame.aspect
+;                ;[nh nw]   (if (> h w) [h (* h aspect)] [(/ w aspect) w])
+;                [nh nw]   (if (> aspect 1) [h (* h aspect)] [(/ w aspect) w])
+;                fix-frame (hs.geometry.new x y nw nh)] 
+;            (win:setFrame fix-frame 0)))))
 
 (lambda get-screens [] 
   "Gets screens"
