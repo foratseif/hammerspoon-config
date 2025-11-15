@@ -168,12 +168,11 @@
   "Sets the window frame and tries to recover if
   the window has a set aspect ratio"
   (let [bef-frame (win:frame)
-                  new-frame (hs.geometry.new x y w h)]
+        new-frame (hs.geometry.new x y w h)]
     (win:setFrame new-frame 0)
-    (do-after 3
-              #(if (eq-decimal? bef-frame.aspect
-                                (let [aft-frame (win:frame)] aft-frame.aspect))
-                   (set-win-frame-save-aspect-ratio win new-frame)))))
+    (if (eq-decimal? bef-frame.aspect
+          (let [aft-frame (win:frame)] aft-frame.aspect))
+        (set-win-frame-save-aspect-ratio win new-frame))))
 
 (lambda get-screens []
   "Gets screens"
