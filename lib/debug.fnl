@@ -55,9 +55,16 @@
   "Converts variable to string and prints it"
   (print (to-str thing ?key)))
 
+(lambda time-func [func]
+  (print "starting to time function")
+  (local start (os.clock))
+  (func)
+  (print (string.format "function took %s ms" (math.floor (* (- (os.clock) start) 1000)))))
+
 {: inspect 
  : to-str
  : create-border
  : show-border
  : clear-borders
- : create-and-show-border}
+ : create-and-show-border
+ : time-func}

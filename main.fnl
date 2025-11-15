@@ -14,21 +14,21 @@
     true for the condition. If the condition is not
     set then it returns the first truthy element."
   (let [cond (or ?cond #$1)]
-    (accumulate [ret nil i v (ipairs tbl)] 
-      (or ret 
+    (accumulate [ret nil i v (ipairs tbl)]
+      (or ret
           (if (cond v i) v nil)))))
 
 (lambda index-of [tbl ?cond]
   (let [cond (or ?cond #$1)]
-    (accumulate [ret nil i v (ipairs tbl)] 
-      (or ret 
+    (accumulate [ret nil i v (ipairs tbl)]
+      (or ret
           (if (cond v i) i nil)))))
 
 (lambda round-to-decimal [num ?decimals]
   (let [factor (^ 10 (or ?decimals 2))]
     (/ (math.floor (* num factor)) factor)))
 
-(lambda eq-decimal? [num1 num2 ?decimals] 
+(lambda eq-decimal? [num1 num2 ?decimals]
   (= (round-to-decimal num1 ?decimals)
      (round-to-decimal num2 ?decimals)))
 
@@ -43,6 +43,16 @@
   "Filter sequential table"
   (icollect [i v (ipairs tbl)] (if (cond v i) v)))
 
+(lambda flatten [thing ?res]
+  "Flatten nested sequential tables"
+  (let [res (or ?res [])]
+    (case (type thing)
+          :table
+            (each [_ v (pairs thing)]
+              (flatten v res))
+          _ (table.insert res thing))
+    res))
+
 (lambda sort [tbl comperator]
   "Sort tbl based on comperator function."
   (let [sorted (icollect [_ v (ipairs tbl)] v)]
@@ -52,7 +62,7 @@
 (lambda do-after [ms callback]
   (hs.timer.doAfter (/ ms 1000) callback))
 
-(lambda frame-of [thing] 
+(lambda frame-of [thing]
   (let [metatable  (getmetatable thing)
         frame-func (?. metatable :frame)]
     (if frame-func (thing:frame) thing)))
@@ -72,12 +82,12 @@
 (lambda same-frame? [a b]
   (a:equals b))
 
-;(lambda f-merge [frame-a frame-b] 
+;(lambda f-merge [frame-a frame-b]
 ;  (hs.geometry.new {:x (math.min frame-a.x frame-b.x)
 ;                    :y (math.min frame-a.y frame-b.y)
 ;                    :x2 (math.max frame-a.x2 frame-b.x2)
 ;                    :y2 (math.max frame-a.y2 frame-b.y2)}))
-(lambda f-merge [frame-a frame-b] 
+(lambda f-merge [frame-a frame-b]
   (frame-a:union frame-b))
 
 (lambda merge-frames [things cond]
@@ -85,7 +95,7 @@
     (each [_ thing (ipairs things)]
       (let [frame (frame-of thing)
             ?matched (first output #(cond frame $1))]
-        (if ?matched 
+        (if ?matched
             (let [merged (f-merge frame ?matched)]
                 (set ?matched.x merged.x)
                 (set ?matched.y merged.y)
@@ -141,29 +151,31 @@
   (and (f-mostly-in-x? innie outie)
        (f-mostly-in-y? innie outie)))
 
-(lambda focus-window [win] 
+(lambda focus-window [win]
   (if win (win:focus)))
 
-(lambda top-window-in [frame] 
+(lambda top-window-in [frame]
   (first (hs.window.orderedWindows) #(f-mostly-in? $1 frame)))
 
+(lambda set-win-frame-save-aspect-ratio [win frame]
+  (let [wframe (win:frame)
+        [nh nw] (if (> frame.aspect wframe.aspect)
+                    [frame.h (* frame.h wframe.aspect)]
+                    [(/ frame.w wframe.aspect) frame.w])]
+    (win:setFrame (hs.geometry.new frame.x frame.y nw nh) 0)))
+
 (lambda set-win-frame [win {: x : y : w : h}]
-  "Sets the window frame and tries to recover if 
-    the window has a set aspect ratio"
+  "Sets the window frame and tries to recover if
+  the window has a set aspect ratio"
   (let [bef-frame (win:frame)
-        new-frame (hs.geometry.new x y w h)]
-    (win:setFrame new-frame 0)))
+                  new-frame (hs.geometry.new x y w h)]
+    (win:setFrame new-frame 0)
+    (do-after 3
+              #(if (eq-decimal? bef-frame.aspect
+                                (let [aft-frame (win:frame)] aft-frame.aspect))
+                   (set-win-frame-save-aspect-ratio win new-frame)))))
 
-;(do-after 1000
-;      #(let [aft-frame (win:frame)]
-;        (if (eq-decimal? bef-frame.aspect aft-frame.aspect)
-;          (let [aspect    bef-frame.aspect
-;                ;[nh nw]   (if (> h w) [h (* h aspect)] [(/ w aspect) w])
-;                [nh nw]   (if (> aspect 1) [h (* h aspect)] [(/ w aspect) w])
-;                fix-frame (hs.geometry.new x y nw nh)] 
-;            (win:setFrame fix-frame 0)))))
-
-(lambda get-screens [] 
+(lambda get-screens []
   "Gets screens"
   (hs.screen.allScreens))
 
@@ -171,9 +183,9 @@
   "Gets screens sorted on comperator-by-frames"
   (sort (get-screens) comperator-by-frames))
 
-(lambda get-screen-of [win] 
+(lambda get-screen-of [win]
   "Gets screen of window based on `f-mostly-in?` function"
-  (first (get-screens) 
+  (first (get-screens)
          #(f-mostly-in? (frame-of win) ($1:frame))))
 
 (lambda is-valid-window [win]
@@ -182,11 +194,19 @@
        (not (win:isMinimized))
        (get-screen-of win)))
 
-(lambda get-active-window [] 
+(lambda get-active-window []
   "Returns active window"
   (hs.window.focusedWindow))
 
-(lambda get-active-screen [] 
+(lambda same-window? [a b]
+  (= (a:id) (b:id)))
+
+(lambda remove-window [win-to-remove windows]
+  (icollect [_ win (ipairs windows)]
+    (if (not (same-window? win win-to-remove))
+        win)))
+
+(lambda get-active-screen []
   "Returns active screen"
   (get-screen-of (hs.window.focusedWindow)))
 
@@ -201,7 +221,7 @@
   (sort (get-windows) comperator-by-frames))
 
 (lambda get-windows-inside [frame]
-  (sort (filter (get-windows) 
+  (sort (filter (get-windows)
                 #(f-mostly-in? (frame-of $1) (frame-of frame)))
         comperator-by-frames))
 
@@ -211,19 +231,19 @@
 (lambda get-groups-sorted []
   (sort (get-groups) frame-comperator))
 
-(lambda get-group-of [win] 
-  (first (get-groups) 
+(lambda get-group-of [win]
+  (first (get-groups)
          #(f-mostly-in? (frame-of win) $1)))
 
-(lambda get-active-group [] 
+(lambda get-active-group []
   "Returns active screen"
   (get-group-of (hs.window.focusedWindow)))
 
 (lambda get-columns-sorted []
   (merge-frames (get-groups-sorted)
                 #(let [screen-1 (get-screen-of $1)
-                       screen-2 (get-screen-of $2)] 
-                   (and (f-intersect-x? $1 $2) 
+                       screen-2 (get-screen-of $2)]
+                   (and (f-intersect-x? $1 $2)
                         (= (screen-1:id) (screen-2:id))))))
 
 (lambda get-column-of [win]
@@ -261,15 +281,23 @@
       (set-win-frame win {: x : y : h : w}))))
 
 ;; actual functions
-(lambda cmd-focus-window [direction]
-    (let [windows  (get-windows-inside (get-active-screen))
-          curr-win (get-active-window)
+(lambda cmd-focus-window-in [windows direction]
+    (let [curr-win (get-active-window)
           curr-idx (index-of-window windows curr-win)]
       (if curr-idx
           (let [step (case direction :next 1 :prev -1)
                 next-idx (+ (% (+ curr-idx -1 step) (length windows)) 1)
                 next-win (. windows next-idx)]
             (focus-window next-win)))))
+
+(lambda cmd-focus-frame-in [frames direction]
+    (let [curr-win (get-active-window)
+          curr-idx (index-of frames #(f-mostly-in? curr-win $1))]
+      (if curr-idx
+          (let [step (case direction :next 1 :prev -1)
+                next-idx (+ (% (+ curr-idx -1 step) (length frames)) 1)
+                next-frm (. frames next-idx)]
+            (focus-window (top-window-in next-frm))))))
 
 (lambda cmd-focus-group [direction]
     (let [groups   (get-groups-sorted)
@@ -291,27 +319,27 @@
                 next-col (. columns next-idx)]
             (focus-window (top-window-in next-col))))))
 
-(lambda cmd-stack-group [] 
+(lambda cmd-stack-group []
   (let [group   (get-active-group)
         windows (get-windows-inside group)]
     (stack-windows windows group)))
 
-(lambda cmd-expand-group [] 
+(lambda cmd-expand-group []
   (let [group-frame   (get-active-group)
         screen-frame  (frame-of (get-active-screen))
         expanded      (pad-frame (expand-frame group-frame screen-frame))
         innie-windows (filter (get-windows-inside screen-frame)
                               #(f-mostly-in? $1 group-frame))]
-    (each [_ win (ipairs innie-windows)] 
+    (each [_ win (ipairs innie-windows)]
       (let [win-frame (win:frame)]
-        (set-win-frame win 
+        (set-win-frame win
           (hs.geometry.new {:x (+ expanded.x (- win-frame.x group-frame.x))
                             :y (+ expanded.y (- win-frame.y group-frame.y))
                             :x2 (- expanded.x2 (- group-frame.x2 win-frame.x2))
                             :y2 (- expanded.y2 (- group-frame.y2 win-frame.y2))}))))))
 
 
-(lambda cmd-move-window [direction] 
+(lambda cmd-move-window [direction]
   (let [win     (get-active-window)
         screen  (get-active-screen)
         frame   (win:frame)
@@ -354,7 +382,20 @@
         (stack-windows (get-windows-inside gr) (pad-frame expanded))))))
 
 (lambda cmd-carve-window [] nil)
-(lambda cmd-migrate-window [] nil)
+
+(lambda cmd-migrate-window [direction]
+  (let [window    (get-active-window)
+        groups    (get-groups-sorted)
+        curr-idx  (index-of groups #(f-mostly-in? window $1))]
+    (if curr-idx
+        (let [step (case direction :next 1 :prev -1)
+              next-idx (+ (% (+ curr-idx -1 step) (length groups)) 1)
+              next-grp (. groups next-idx)
+              curr-grp (. groups curr-idx)
+              curr-wins (get-windows-inside curr-grp)
+              next-wins (get-windows-inside next-grp)]
+          (stack-windows (flatten [next-wins window]) next-grp)
+          (stack-windows (remove-window window curr-wins) curr-grp)))))
 
 ;; testing stuff here
 (lambda test []
@@ -362,8 +403,8 @@
         windows (get-windows-sorted)
         groups  (get-groups)
         columns  (get-columns-sorted)]
-    (dbg.inspect (collect [_ scr (ipairs screens)] 
-      (values 
+    (dbg.inspect (collect [_ scr (ipairs screens)]
+      (values
         (scr:name)
         (icollect [_ win (ipairs windows)]
           (if (f-mostly-in? (win:frame) (scr:frame))
@@ -377,7 +418,7 @@
           (dbg.show-border
             (dbg.create-border (pad-frame fr 2))))
     (each [i screen (ipairs screens)]
-      (print (.. (screen:name) " " (let [size (screen:frame)] 
+      (print (.. (screen:name) " " (let [size (screen:frame)]
                                      (.. "(" size.w "x" size.h ")")))))
     (each [i win (ipairs (get-windows-inside (get-active-screen)))]
       (print (win:title)))))
@@ -387,8 +428,19 @@
 
 (hs.hotkey.bind [:cmd] :H #nil)
 
-(hs.hotkey.bind [:shift :ctrl] :J #(cmd-focus-window :next))
-(hs.hotkey.bind [:shift :ctrl] :K #(cmd-focus-window :prev))
+;(hs.hotkey.bind [:shift :ctrl] :J #(cmd-focus-window-in (get-windows-inside (get-active-screen)) :next))
+;(hs.hotkey.bind [:shift :ctrl] :K #(cmd-focus-window-in (get-windows-inside (get-active-screen)) :prev))
+;(hs.hotkey.bind [:shift :ctrl] :J (border.draw-after #(cmd-focus-frame-in (get-groups-sorted) :next)))
+;(hs.hotkey.bind [:shift :ctrl] :K (border.draw-after #(cmd-focus-frame-in (get-groups-sorted) :prev)))
+
+(hs.hotkey.bind [:shift :ctrl] :J (border.draw-after #(cmd-focus-window-in (get-windows-sorted) :next)))
+(hs.hotkey.bind [:shift :ctrl] :K (border.draw-after #(cmd-focus-window-in (get-windows-sorted) :prev)))
+(hs.hotkey.bind [:shift :ctrl] :P (border.draw-after #(cmd-focus-frame-in (get-groups-sorted) :prev)))
+(hs.hotkey.bind [:shift :ctrl] :N (border.draw-after #(cmd-focus-frame-in (get-groups-sorted) :next)))
+
+(hs.hotkey.bind [:shift :ctrl] :F #(dbg.time-func #(hs.window.allWindows)))
+
+
 (hs.hotkey.bind [:shift :ctrl] :L #(cmd-focus-column :next))
 (hs.hotkey.bind [:shift :ctrl] :H #(cmd-focus-column :prev))
 
@@ -398,9 +450,10 @@
 (hs.hotkey.bind [:shift :ctrl :cmd] :S (border.draw-after cmd-stack-group))
 (hs.hotkey.bind [:shift :ctrl :cmd] :E (border.draw-after cmd-expand-group))
 
+(hs.hotkey.bind [:shift :ctrl :cmd] :J (border.draw-after #(cmd-migrate-window :next)))
+(hs.hotkey.bind [:shift :ctrl :cmd] :K (border.draw-after #(cmd-migrate-window :prev)))
+
 (hs.hotkey.bind [:shift :ctrl :cmd] :H (border.draw-after #(cmd-move-window :left)))
-(hs.hotkey.bind [:shift :ctrl :cmd] :J (border.draw-after #(cmd-move-window :down)))
-(hs.hotkey.bind [:shift :ctrl :cmd] :K (border.draw-after #(cmd-move-window :up)))
 (hs.hotkey.bind [:shift :ctrl :cmd] :L (border.draw-after #(cmd-move-window :right)))
 
 (hs.hotkey.bind [:shift :ctrl :cmd] :+ (border.draw-after #(cmd-resize-window :both-up)))

@@ -1,6 +1,11 @@
-(local border-color {:red 0.7 :green 0.7 :blue 0.7 :alpha 0.8})
-(local border-width 2)
-(local border-offset 1)
+;(local border-color {:red 0.7 :green 0.7 :blue 0.7 :alpha 0.8})
+;(local border-width 2)
+;(local border-offset 1)
+
+(local border-color {:red 0.2 :green 0.7 :blue 0.8 :alpha 1})
+(local border-width 3)
+(local border-offset 3)
+
 (var focus-border nil)
 
 (lambda adjust-frame [frame]
@@ -14,7 +19,8 @@
     (border:setFill false)
     (border:setStrokeColor border-color)
     (border:setStrokeWidth border-width)
-    (border:setRoundedRectRadii 11 11)
+    (local radius (- 12 border-offset))
+    (border:setRoundedRectRadii radius radius)
     (set focus-border border)))
 
 (lambda delete []
