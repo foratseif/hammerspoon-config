@@ -428,18 +428,10 @@
 
 (hs.hotkey.bind [:cmd] :H #nil)
 
-;(hs.hotkey.bind [:shift :ctrl] :J #(cmd-focus-window-in (get-windows-inside (get-active-screen)) :next))
-;(hs.hotkey.bind [:shift :ctrl] :K #(cmd-focus-window-in (get-windows-inside (get-active-screen)) :prev))
-;(hs.hotkey.bind [:shift :ctrl] :J (border.draw-after #(cmd-focus-frame-in (get-groups-sorted) :next)))
-;(hs.hotkey.bind [:shift :ctrl] :K (border.draw-after #(cmd-focus-frame-in (get-groups-sorted) :prev)))
-
 (hs.hotkey.bind [:shift :ctrl] :J (border.draw-after #(cmd-focus-window-in (get-windows-sorted) :next)))
 (hs.hotkey.bind [:shift :ctrl] :K (border.draw-after #(cmd-focus-window-in (get-windows-sorted) :prev)))
 (hs.hotkey.bind [:shift :ctrl] :P (border.draw-after #(cmd-focus-frame-in (get-groups-sorted) :prev)))
 (hs.hotkey.bind [:shift :ctrl] :N (border.draw-after #(cmd-focus-frame-in (get-groups-sorted) :next)))
-
-(hs.hotkey.bind [:shift :ctrl] :F #(dbg.time-func #(hs.window.allWindows)))
-
 
 (hs.hotkey.bind [:shift :ctrl] :L #(cmd-focus-column :next))
 (hs.hotkey.bind [:shift :ctrl] :H #(cmd-focus-column :prev))
@@ -453,14 +445,14 @@
 (hs.hotkey.bind [:shift :ctrl :cmd] :J (border.draw-after #(cmd-migrate-window :next)))
 (hs.hotkey.bind [:shift :ctrl :cmd] :K (border.draw-after #(cmd-migrate-window :prev)))
 
-(hs.hotkey.bind [:shift :ctrl :cmd] :H (border.draw-after #(cmd-move-window :left)))
-(hs.hotkey.bind [:shift :ctrl :cmd] :L (border.draw-after #(cmd-move-window :right)))
+;(hs.hotkey.bind [:shift :ctrl :cmd] :H (border.draw-after #(cmd-move-window :left)))
+;(hs.hotkey.bind [:shift :ctrl :cmd] :L (border.draw-after #(cmd-move-window :right)))
 
-(hs.hotkey.bind [:shift :ctrl :cmd] :+ (border.draw-after #(cmd-resize-window :both-up)))
-(hs.hotkey.bind [:shift :ctrl :cmd] :- (border.draw-after #(cmd-resize-window :both-down)))
-(hs.hotkey.bind [:shift :ctrl :cmd] :Y (border.draw-after #(cmd-resize-window :horz-down)))
-(hs.hotkey.bind [:shift :ctrl :cmd] :U (border.draw-after #(cmd-resize-window :vert-down)))
-(hs.hotkey.bind [:shift :ctrl :cmd] :I (border.draw-after #(cmd-resize-window :vert-up)))
-(hs.hotkey.bind [:shift :ctrl :cmd] :O (border.draw-after #(cmd-resize-window :horz-up)))
+;(hs.hotkey.bind [:shift :ctrl :cmd] :+ (border.draw-after #(cmd-resize-window :both-up)))
+;(hs.hotkey.bind [:shift :ctrl :cmd] :- (border.draw-after #(cmd-resize-window :both-down)))
+;(hs.hotkey.bind [:shift :ctrl :cmd] :Y (border.draw-after #(cmd-resize-window :horz-down)))
+;(hs.hotkey.bind [:shift :ctrl :cmd] :U (border.draw-after #(cmd-resize-window :vert-down)))
+;(hs.hotkey.bind [:shift :ctrl :cmd] :I (border.draw-after #(cmd-resize-window :vert-up)))
+;(hs.hotkey.bind [:shift :ctrl :cmd] :O (border.draw-after #(cmd-resize-window :horz-up)))
 
 (border.init)
