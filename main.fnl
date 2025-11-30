@@ -422,10 +422,28 @@
     (each [i win (ipairs (get-windows-inside (get-active-screen)))]
       (print (win:title)))))
 
+(lambda get-frame-state [frame]
+  (let [windows (get-windows-inside frame)]
+    (icollect [i win (ipairs windows)]
+      (let [win-frame (win:frame)
+            x% (/ (- win-frame.x frame.x) frame.x)
+            y% (/ (- win-frame.y frame.y) frame.y)
+            w% (/ win-frame.w frame.w)
+            h% (/ win-frame.h frame.h)]
+        {:id (win:id) : x% : y% : w% : h%}))))
+
+(lambda state-poc []
+  (let [columns (get-columns-sorted)]
+    (each [i col (ipairs columns)]
+      (dbg.inspect (get-frame-state col) (.. "Column[" i "]"))
+      (dbg.create-and-show-border :magenta col))))
+
 (hs.hotkey.bind [:shift :ctrl] :D test)
+(hs.hotkey.bind [:shift :ctrl] :F state-poc)
 (hs.hotkey.bind [:shift :ctrl] :R dbg.clear-borders)
 
 (hs.hotkey.bind [:cmd] :H #nil)
+(hs.hotkey.bind [:cmd] :M #nil)
 
 (hs.hotkey.bind [:shift :ctrl] :J (border.draw-after #(cmd-focus-window-in (get-windows-sorted) :next)))
 (hs.hotkey.bind [:shift :ctrl] :K (border.draw-after #(cmd-focus-window-in (get-windows-sorted) :prev)))

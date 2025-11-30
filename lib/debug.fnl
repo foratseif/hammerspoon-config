@@ -11,10 +11,10 @@
     (border:delete))
   (set borders []))
 
-(lambda to-str [thing ?key ?level] 
+(lambda to-str [thing ?key ?level]
   "Converts variable to string"
   (let [level  (or ?level 0)
-        indent (string.rep "  " level)] 
+        indent (string.rep "  " level)]
     (.. indent
         (if ?key (.. ?key " = ") "")
         (if (> level 5)
@@ -22,10 +22,10 @@
           (case [(type thing)]
             [:string] (.. "'" thing "'")
             [:userdata] "#userdata"
-            [:table] 
+            [:table]
               (.. (.. "{" "\n")
-                  (table.concat 
-                    (icollect [k v (pairs thing)] 
+                  (table.concat
+                    (icollect [k v (pairs thing)]
                       (to-str v k (+ level 1))))
                   (.. indent "}"))
             _ (tostring thing)))
@@ -38,14 +38,15 @@
     (border:setStrokeWidth 4)
     (border:setFill false)
     (border:setLevel :floating)
-    (border:setBehaviorByLabels 
+    (border:setBehaviorByLabels
       [:canJoinAllSpaces :stationary :ignoresMouseEvents])
-    (border:setStrokeColor 
-      (case [?color]
-        [:red] {:red 1 :green 0 :blue 0 :alpha 1}
-        [:blue] {:red 0 :green 0 :blue 1 :alpha 1}
-        [:green] {:red 0 :green 1 :blue 0 :alpha 1}
-        _ {:red 1 :green 0 :blue 1 :alpha 1}))
+    (border:setStrokeColor
+      (case ?color
+        :red {:red 1 :green 0 :blue 0 :alpha 1}
+        :blue {:red 0 :green 0 :blue 1 :alpha 1}
+        :green {:red 0 :green 1 :blue 0 :alpha 1}
+        :magenta {:red 1 :green 0 :blue 1 :alpha 1}
+        _ {:red 1 :green 0 :blue 1 :alpha 1})) ;; megenta too
     border))
 
 (lambda create-and-show-border [?color rect]
@@ -61,7 +62,7 @@
   (func)
   (print (string.format "function took %s ms" (math.floor (* (- (os.clock) start) 1000)))))
 
-{: inspect 
+{: inspect
  : to-str
  : create-border
  : show-border
