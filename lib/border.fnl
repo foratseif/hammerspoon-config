@@ -3,7 +3,7 @@
 ;(local border-offset 1)
 
 (local border-color {:red 0.2 :green 0.7 :blue 0.8 :alpha 1})
-(local border-width 3)
+(local border-width 1)
 (local border-offset 3)
 
 (var focus-border nil)
@@ -24,15 +24,15 @@
     (set focus-border border)))
 
 (lambda delete []
-  (if focus-border 
+  (if focus-border
       (do (focus-border:delete)
           (set focus-border nil))))
 
 (lambda draw []
   (delete)
   (let [win (hs.window.focusedWindow)]
-    (if win 
-        (do (if (not focus-border) 
+    (if win
+        (do (if (not focus-border)
                 (create-border (win:frame)))
             (adjust-frame (win:frame))
             (focus-border:show)))))
@@ -49,8 +49,8 @@
     (window-filter:subscribe hs.window.filter.windowMoved draw)))
 
 (lambda draw-after [func]
-  (lambda [] 
-    (func) 
+  (lambda []
+    (func)
     (draw)))
 
 {: init
