@@ -18,6 +18,12 @@
       (or ret
           (if (cond v i) v nil)))))
 
+(lambda index-wrap [index len]
+  (+ (% (- index 1) len) 1))
+
+(lambda index-limit [index len]
+  (math.max (math.min index len) 1))
+
 (lambda index-of [tbl ?cond]
   (let [cond (or ?cond #$1)]
     (accumulate [ret nil i v (ipairs tbl)]
@@ -285,7 +291,7 @@
           curr-idx (index-of-window windows curr-win)]
       (if curr-idx
           (let [step (case direction :next 1 :prev -1)
-                next-idx (+ (% (+ curr-idx -1 step) (length windows)) 1)
+                next-idx (index-wrap (+ curr-idx step) (length windows))
                 next-win (. windows next-idx)]
             (focus-window next-win)))))
 
@@ -294,7 +300,7 @@
           curr-idx (index-of frames #(f-mostly-in? curr-win $1))]
       (if curr-idx
           (let [step (case direction :next 1 :prev -1)
-                next-idx (+ (% (+ curr-idx -1 step) (length frames)) 1)
+                next-idx (index-wrap (+ curr-idx step) (length frames))
                 next-frm (. frames next-idx)]
             (focus-window (top-window-in next-frm))))))
 
@@ -304,7 +310,7 @@
           curr-idx (index-of groups #(same-frame? $1 curr-grp))]
       (if curr-idx
           (let [step (case direction :next 1 :prev -1)
-                next-idx (+ (% (+ curr-idx -1 step) (length groups)) 1)
+                next-idx (index-wrap (+ curr-idx step) (length groups))
                 next-grp (. groups next-idx)]
             (focus-window (top-window-in next-grp))))))
 
@@ -314,7 +320,7 @@
           curr-idx (index-of columns #(same-frame? $1 curr-col))]
       (if curr-idx
           (let [step (case direction :next 1 :prev -1)
-                next-idx (+ (% (+ curr-idx -1 step) (length columns)) 1)
+                next-idx (index-wrap (+ curr-idx step) (length columns))
                 next-col (. columns next-idx)]
             (focus-window (top-window-in next-col))))))
 
@@ -388,7 +394,7 @@
         curr-idx  (index-of groups #(f-mostly-in? window $1))]
     (if curr-idx
         (let [step (case direction :next 1 :prev -1)
-              next-idx (+ (% (+ curr-idx -1 step) (length groups)) 1)
+              next-idx (index-wrap (+ curr-idx step) (length groups))
               next-grp (. groups next-idx)
               curr-grp (. groups curr-idx)
               curr-wins (get-windows-inside curr-grp)
