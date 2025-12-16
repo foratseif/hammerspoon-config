@@ -4,10 +4,15 @@
 
 (local THRES_INSIDE 0.55)
 (local THRES_INTER 75)
-(local STACK_STEP 15)
+(local STACK_STEP 25)
 (local PADDING 15)
 (local MOVE_STEP 150)
 (local SCALE_STEP 150)
+
+;; TODO
+;; - new expand algorithm, where boxes meet in the middle
+;; - column flipping
+;; - column state
 
 (lambda first [tbl ?cond]
   "Returns the first element in the table that returns
@@ -163,12 +168,14 @@
 (lambda top-window-in [frame]
   (first (hs.window.orderedWindows) #(f-mostly-in? $1 frame)))
 
-(lambda set-win-frame-save-aspect-ratio [win frame]
-  (let [wframe (win:frame)
-        [nh nw] (if (> frame.aspect wframe.aspect)
+(lambda set-win-frame-save-aspect-ratio [win frame ?center]
+  (let [wframe    (win:frame)
+        [nh nw]   (if (> frame.aspect wframe.aspect)
                     [frame.h (* frame.h wframe.aspect)]
-                    [(/ frame.w wframe.aspect) frame.w])]
-    (win:setFrame (hs.geometry.new frame.x frame.y nw nh) 0)))
+                    [(/ frame.w wframe.aspect) frame.w])
+        new-frame (hs.geometry.new frame.x frame.y nw nh)]
+    (if ?center (set new-frame.center ?center))
+    (win:setFrame new-frame 0)))
 
 (lambda set-win-frame [win {: x : y : w : h}]
   "Sets the window frame and tries to recover if
@@ -193,7 +200,7 @@
   (first (get-screens)
          #(f-mostly-in? (frame-of win) ($1:frame))))
 
-(lambda is-valid-window [win]
+(lambda is-valid-window? [win]
   "Returns true if window is relevant"
   (and (win:isStandard)
        (not (win:isMinimized))
@@ -218,7 +225,7 @@
 (lambda get-windows []
   "Returns list of windows filtered with is-valid-window"
   (icollect [_ win (ipairs (hs.window.allWindows))]
-    (if (is-valid-window win)
+    (if (is-valid-window? win)
         win)))
 
 (lambda get-windows-sorted []
@@ -279,9 +286,9 @@
 
 (lambda stack-windows [windows frame]
   (each [i win (ipairs windows)]
-    (let [x (+ frame.x (* STACK_STEP (- i 1)))
+    (let [x frame.x
           y (+ frame.y (* STACK_STEP (- i 1)))
-          w (- frame.w (* STACK_STEP (- (length windows) 1)))
+          w frame.w
           h (- frame.h (* STACK_STEP (- (length windows) 1)))]
       (set-win-frame win {: x : y : h : w}))))
 
@@ -291,7 +298,7 @@
           curr-idx (index-of-window windows curr-win)]
       (if curr-idx
           (let [step (case direction :next 1 :prev -1)
-                next-idx (index-wrap (+ curr-idx step) (length windows))
+                next-idx (index-limit (+ curr-idx step) (length windows))
                 next-win (. windows next-idx)]
             (focus-window next-win)))))
 
@@ -300,7 +307,7 @@
           curr-idx (index-of frames #(f-mostly-in? curr-win $1))]
       (if curr-idx
           (let [step (case direction :next 1 :prev -1)
-                next-idx (index-wrap (+ curr-idx step) (length frames))
+                next-idx (index-limit (+ curr-idx step) (length frames))
                 next-frm (. frames next-idx)]
             (focus-window (top-window-in next-frm))))))
 
@@ -310,7 +317,7 @@
           curr-idx (index-of groups #(same-frame? $1 curr-grp))]
       (if curr-idx
           (let [step (case direction :next 1 :prev -1)
-                next-idx (index-wrap (+ curr-idx step) (length groups))
+                next-idx (index-limit (+ curr-idx step) (length groups))
                 next-grp (. groups next-idx)]
             (focus-window (top-window-in next-grp))))))
 
@@ -320,7 +327,7 @@
           curr-idx (index-of columns #(same-frame? $1 curr-col))]
       (if curr-idx
           (let [step (case direction :next 1 :prev -1)
-                next-idx (index-wrap (+ curr-idx step) (length columns))
+                next-idx (index-limit (+ curr-idx step) (length columns))
                 next-col (. columns next-idx)]
             (focus-window (top-window-in next-col))))))
 
@@ -342,7 +349,6 @@
                             :y (+ expanded.y (- win-frame.y group-frame.y))
                             :x2 (- expanded.x2 (- group-frame.x2 win-frame.x2))
                             :y2 (- expanded.y2 (- group-frame.y2 win-frame.y2))}))))))
-
 
 (lambda cmd-move-window [direction]
   (let [win     (get-active-window)
@@ -394,7 +400,7 @@
         curr-idx  (index-of groups #(f-mostly-in? window $1))]
     (if curr-idx
         (let [step (case direction :next 1 :prev -1)
-              next-idx (index-wrap (+ curr-idx step) (length groups))
+              next-idx (index-limit (+ curr-idx step) (length groups))
               next-grp (. groups next-idx)
               curr-grp (. groups curr-idx)
               curr-wins (get-windows-inside curr-grp)
