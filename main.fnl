@@ -85,19 +85,9 @@
                        :x2 (- rect.x2 padding)
                        :y2 (- rect.y2 padding)})))
 
-;(lambda same-frame? [a b]
-;  (and (= a.x b.x)
-;       (= a.y b.y)
-;       (= a.w b.w)
-;       (= a.h b.h)))
 (lambda same-frame? [a b]
   (a:equals b))
 
-;(lambda f-merge [frame-a frame-b]
-;  (hs.geometry.new {:x (math.min frame-a.x frame-b.x)
-;                    :y (math.min frame-a.y frame-b.y)
-;                    :x2 (math.max frame-a.x2 frame-b.x2)
-;                    :y2 (math.max frame-a.y2 frame-b.y2)}))
 (lambda f-merge [frame-a frame-b]
   (frame-a:union frame-b))
 
