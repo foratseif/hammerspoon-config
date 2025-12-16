@@ -2,9 +2,10 @@
 ;(local border-width 2)
 ;(local border-offset 1)
 
-;(local border-color {:red 0.2 :green 0.7 :blue 0.8 :alpha 1})
-(local border-color {:red 0.7 :green 0.7 :blue 0.8 :alpha 0.5})
+(local border-color {:red 0.2 :green 0.7 :blue 0.8 :alpha 1})
+;(local border-color {:red 0.7 :green 0.7 :blue 0.8 :alpha 0.5})
 ;(local border-color {:red 0.624 :green 0.494 :blue 0.125 :alpha 1})
+;(local border-color {:red 0.7695 :green 0.2578 :blue 0.7421 :alpha 0.9})
 (local border-width 5)
 (local border-offset 3)
 
