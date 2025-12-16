@@ -163,7 +163,9 @@
        (f-mostly-in-y? innie outie)))
 
 (lambda focus-window [win]
-  (if win (win:focus)))
+  (if win (do
+            (win:becomeMain)
+            (win:focus))))
 
 (lambda top-window-in [frame]
   (first (hs.window.orderedWindows) #(f-mostly-in? $1 frame)))
