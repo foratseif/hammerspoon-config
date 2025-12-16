@@ -162,10 +162,18 @@
   (and (f-mostly-in-x? innie outie)
        (f-mostly-in-y? innie outie)))
 
+
+(lambda get-active-window []
+  "Returns active window"
+  (hs.window.focusedWindow))
+
 (lambda focus-window [win]
   (if win (do
             (win:becomeMain)
-            (win:focus))))
+            (win:focus)
+            (if (not (= (: (get-active-window) :id)
+                        (win:id)))
+                (win:focus)))))
 
 (lambda top-window-in [frame]
   (first (hs.window.orderedWindows) #(f-mostly-in? $1 frame)))
@@ -207,10 +215,6 @@
   (and (win:isStandard)
        (not (win:isMinimized))
        (get-screen-of win)))
-
-(lambda get-active-window []
-  "Returns active window"
-  (hs.window.focusedWindow))
 
 (lambda same-window? [a b]
   (= (a:id) (b:id)))
