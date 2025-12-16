@@ -401,6 +401,18 @@
               curr-grp (. groups curr-idx)]
           (set-win-frame window (pad-frame next-grp))))))
 
+(lambda cmd-hide-in-corner []
+  (let [window   (get-active-window)
+        frame    (let [screens (get-screens-sorted)]
+                   (: (. screens (length screens)) :frame))
+        next-win (let [windows  (get-windows-sorted)
+                       curr-idx (index-of-window windows window)]
+                   (. windows (index-limit (- curr-idx 1)
+                                           (length windows))))]
+    (window:setTopLeft
+      (hs.geometry.point (- frame.x2 5) (- frame.y2 5)))
+    (next-win:focus)))
+
 ;; testing stuff here
 (lambda test []
   (let [screens (get-screens-sorted)
@@ -448,6 +460,8 @@
 
 (hs.hotkey.bind [:shift :ctrl :cmd] :J (border.draw-after #(cmd-migrate-window :next)))
 (hs.hotkey.bind [:shift :ctrl :cmd] :K (border.draw-after #(cmd-migrate-window :prev)))
+
+(hs.hotkey.bind [:shift :ctrl] :forwarddelete cmd-hide-in-corner)
 
 ;(hs.hotkey.bind [:shift :ctrl :cmd] :H (border.draw-after #(cmd-move-window :left)))
 ;(hs.hotkey.bind [:shift :ctrl :cmd] :L (border.draw-after #(cmd-move-window :right)))
