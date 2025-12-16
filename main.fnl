@@ -408,11 +408,8 @@
         (let [step (case direction :next 1 :prev -1)
               next-idx (index-limit (+ curr-idx step) (length groups))
               next-grp (. groups next-idx)
-              curr-grp (. groups curr-idx)
-              curr-wins (get-windows-inside curr-grp)
-              next-wins (get-windows-inside next-grp)]
-          (stack-windows (flatten [next-wins window]) next-grp)
-          (stack-windows (remove-window window curr-wins) curr-grp)))))
+              curr-grp (. groups curr-idx)]
+          (set-win-frame window (pad-frame next-grp))))))
 
 ;; testing stuff here
 (lambda test []
