@@ -346,6 +346,20 @@
                             :x2 (- expanded.x2 (- group-frame.x2 win-frame.x2))
                             :y2 (- expanded.y2 (- group-frame.y2 win-frame.y2))}))))))
 
+(lambda cmd-vertical-expand-group []
+  (let [group-frame   (get-active-group)
+        screen-frame  (frame-of (get-active-screen))
+        expanded      (pad-frame (expand-frame group-frame screen-frame))
+        innie-windows (filter (get-windows-inside screen-frame)
+                              #(f-mostly-in? $1 group-frame))]
+    (each [_ win (ipairs innie-windows)]
+      (let [win-frame (win:frame)]
+        (set-win-frame win
+          (hs.geometry.new {:x win-frame.x
+                            :y (+ expanded.y (- win-frame.y group-frame.y))
+                            :x2 win-frame.x2
+                            :y2 (- expanded.y2 (- group-frame.y2 win-frame.y2))}))))))
+
 (lambda cmd-move-window [direction]
   (let [win     (get-active-window)
         screen  (get-active-screen)
@@ -454,6 +468,8 @@
 
 (hs.hotkey.bind [:shift :ctrl] :S (border.draw-after cmd-stack-group))
 (hs.hotkey.bind [:shift :ctrl] :E (border.draw-after cmd-expand-group))
+(hs.hotkey.bind [:shift :ctrl] :F (border.draw-after cmd-vertical-expand-group))
+
 (hs.hotkey.bind [:shift :ctrl] :O (border.draw-after #(cmd-organize-screen)))
 (hs.hotkey.bind [:shift :ctrl :cmd] :S (border.draw-after cmd-stack-group))
 (hs.hotkey.bind [:shift :ctrl :cmd] :E (border.draw-after cmd-expand-group))
