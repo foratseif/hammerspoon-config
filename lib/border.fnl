@@ -1,15 +1,15 @@
-;(local border-color {:red 0.7 :green 0.7 :blue 0.7 :alpha 0.8})
-;(local border-width 2)
-;(local border-offset 1)
-
-(local border-color {:red 0.2 :green 0.7 :blue 0.8 :alpha 1})
-;(local border-color {:red 0.7 :green 0.7 :blue 0.8 :alpha 0.5})
-;(local border-color {:red 0.624 :green 0.494 :blue 0.125 :alpha 1})
-;(local border-color {:red 0.7695 :green 0.2578 :blue 0.7421 :alpha 0.9})
+;(local border-color {:red 0.2 :green 0.7 :blue 0.8 :alpha 1})
 (local border-width 5)
 (local border-offset 3)
 
+(var mode :normal)
 (var focus-border nil)
+
+(lambda get-border-color []
+  (case mode
+    :normal {:red 0.2 :green 0.7 :blue 0.8 :alpha 1}
+    :window {:red 0.95 :green 0.5 :blue 0.2 :alpha 1}
+    _       {:red 1 :green 1 :blue 1 :alpha 1}))
 
 (lambda adjust-frame [frame]
   (hs.geometry.new
@@ -21,7 +21,7 @@
 (lambda create-border [frame]
   (let [border (hs.drawing.rectangle (adjust-frame frame))]
     (border:setFill false)
-    (border:setStrokeColor border-color)
+    (border:setStrokeColor (get-border-color))
     (border:setStrokeWidth border-width)
     (local radius 12)
     (border:setRoundedRectRadii radius radius)
@@ -56,6 +56,11 @@
     (func)
     (draw)))
 
+(lambda set-mode [val]
+  (set mode val)
+  (draw))
+
 {: init
  : draw
- : draw-after}
+ : draw-after
+ : set-mode}

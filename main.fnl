@@ -470,7 +470,7 @@
 (hs.hotkey.bind [:shift :ctrl] :E (border.draw-after cmd-expand-group))
 (hs.hotkey.bind [:shift :ctrl] :F (border.draw-after cmd-vertical-expand-group))
 
-(hs.hotkey.bind [:shift :ctrl] :O (border.draw-after #(cmd-organize-screen)))
+(hs.hotkey.bind [:shift :ctrl] :O (border.draw-after cmd-organize-screen))
 (hs.hotkey.bind [:shift :ctrl :cmd] :S (border.draw-after cmd-stack-group))
 (hs.hotkey.bind [:shift :ctrl :cmd] :E (border.draw-after cmd-expand-group))
 
@@ -488,5 +488,17 @@
 ;(hs.hotkey.bind [:shift :ctrl :cmd] :U (border.draw-after #(cmd-resize-window :vert-down)))
 ;(hs.hotkey.bind [:shift :ctrl :cmd] :I (border.draw-after #(cmd-resize-window :vert-up)))
 ;(hs.hotkey.bind [:shift :ctrl :cmd] :O (border.draw-after #(cmd-resize-window :horz-up)))
+
+(local window-mode (hs.hotkey.modal.new))
+(hs.hotkey.bind [:shift :ctrl] :W
+  (lambda []
+    (border.set-mode :window)
+    (window-mode:enter)))
+
+(window-mode:bind [] :escape
+  (lambda []
+    (border.set-mode :normal)
+    (window-mode:exit)))
+
 
 (border.init)
