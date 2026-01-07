@@ -32,10 +32,20 @@
       (do (focus-border:delete)
           (set focus-border nil))))
 
+(lambda is-fullscreen? [win]
+  (let [scr  (win:screen)
+        scrf (scr:fullFrame)
+        winf (win:frame)]
+    (and (= scrf.x winf.x)
+         (= scrf.y winf.y)
+         (= scrf.h winf.h)
+         (= scrf.w winf.w)))
+  )
+
 (lambda draw []
   (delete)
   (let [win (hs.window.focusedWindow)]
-    (if win
+    (if (and win (not (is-fullscreen? win)))
         (do (if (not focus-border)
                 (create-border (win:frame)))
             (focus-border:show)))))
