@@ -1,6 +1,6 @@
 ;(local border-color {:red 0.2 :green 0.7 :blue 0.8 :alpha 1})
-(local border-width 5)
-(local border-offset 3)
+(local border-width 3)
+(local border-offset (+ -2 border-width))
 
 (var mode :normal)
 (var focus-border nil)
@@ -23,7 +23,7 @@
     (border:setFill false)
     (border:setStrokeColor (get-border-color))
     (border:setStrokeWidth border-width)
-    (local radius 12)
+    (local radius (+ 7 border-width))
     (border:setRoundedRectRadii radius radius)
     (set focus-border border)))
 
@@ -34,13 +34,18 @@
 
 (lambda is-fullscreen? [win]
   (let [scr  (win:screen)
-        scrf (scr:fullFrame)
-        winf (win:frame)]
-    (and (= scrf.x winf.x)
-         (= scrf.y winf.y)
-         (= scrf.h winf.h)
-         (= scrf.w winf.w)))
-  )
+        winf (win:frame)
+        scrf (scr:frame)
+        scrf-full (scr:fullFrame)]
+    (or (win:isFullscreen)
+        (and (= scrf.x winf.x)
+           (= scrf.y winf.y)
+           (= scrf.h winf.h)
+           (= scrf.w winf.w))
+        (and (= scrf-full.x winf.x)
+           (= scrf-full.y winf.y)
+           (= scrf-full.h winf.h)
+           (= scrf-full.w winf.w)))))
 
 (lambda draw []
   (delete)

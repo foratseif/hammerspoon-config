@@ -5,7 +5,7 @@
 (local THRES_INSIDE 0.55)
 (local THRES_INTER 75)
 (local STACK_STEP 25)
-(local PADDING 15)
+(local PADDING 10)
 (local MOVE_STEP 150)
 (local SCALE_STEP 150)
 
@@ -478,6 +478,7 @@
 (hs.hotkey.bind [:shift :ctrl :cmd] :K (border.draw-after #(cmd-migrate-window :prev)))
 
 (hs.hotkey.bind [:shift :ctrl] :forwarddelete cmd-hide-in-corner)
+(hs.hotkey.bind [:shift :ctrl] :delete cmd-hide-in-corner)
 
 ;(hs.hotkey.bind [:shift :ctrl :cmd] :H (border.draw-after #(cmd-move-window :left)))
 ;(hs.hotkey.bind [:shift :ctrl :cmd] :L (border.draw-after #(cmd-move-window :right)))
