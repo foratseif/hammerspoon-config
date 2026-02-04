@@ -111,10 +111,20 @@
       (< frame-a.x frame-b.x)
       (< frame-a.y frame-b.y)))
 
+
 (lambda comperator-by-frames [a b]
   "Comperator function that gives gets :frame()
     then calls frame-comperator"
   (frame-comperator (frame-of a) (frame-of b)))
+
+(lambda comperator-by-windows [a b]
+  (let [frame-a (frame-of a)
+        frame-b (frame-of b)]
+    (if (not (= frame-a.x frame-b.x))
+        (< frame-a.x frame-b.x)
+        (not (= frame-a.y frame-b.y))
+        (< frame-a.y frame-b.y)
+        (< (a:id) (b:id)))))
 
 (lambda f-intersection-x [a b]
   (let [frame-a      (frame-of a)
@@ -226,7 +236,7 @@
 
 (lambda get-windows-sorted []
   "Returns list of windows sorted on comperator-by-frames"
-  (sort (get-windows) comperator-by-frames))
+  (sort (get-windows) comperator-by-windows))
 
 (lambda get-windows-inside [frame]
   (sort (filter (get-windows)
@@ -288,6 +298,14 @@
           h (- frame.h (* STACK_STEP (- (length windows) 1)))]
       (set-win-frame win {: x : y : h : w}))))
 
+(lambda expland-windows [windows frame]
+  (each [i win (ipairs windows)]
+    (let [x frame.x
+          y frame.y
+          w frame.w
+          h frame.h]
+      (set-win-frame win {: x : y : h : w}))))
+
 ;; actual functions
 (lambda cmd-focus-window-in [windows direction]
     (let [curr-win (get-active-window)
@@ -331,6 +349,11 @@
   (let [group   (get-active-group)
         windows (get-windows-inside group)]
     (stack-windows windows group)))
+
+(lambda cmd-expand-windows []
+  (let [group   (get-active-group)
+        windows (get-windows-inside group)]
+    (expland-windows windows group)))
 
 (lambda cmd-expand-group []
   (let [group-frame   (get-active-group)
@@ -453,8 +476,8 @@
     (each [i win (ipairs (get-windows-inside (get-active-screen)))]
       (print (win:title)))))
 
-(hs.hotkey.bind [:shift :ctrl] :D test)
-(hs.hotkey.bind [:shift :ctrl] :R dbg.clear-borders)
+;(hs.hotkey.bind [:shift :ctrl] :D test)
+;(hs.hotkey.bind [:shift :ctrl] :R dbg.clear-borders)
 
 (hs.hotkey.bind [:cmd] :H #nil)
 
@@ -468,7 +491,7 @@
 
 (hs.hotkey.bind [:shift :ctrl] :S (border.draw-after cmd-stack-group))
 (hs.hotkey.bind [:shift :ctrl] :E (border.draw-after cmd-expand-group))
-(hs.hotkey.bind [:shift :ctrl] :F (border.draw-after cmd-vertical-expand-group))
+(hs.hotkey.bind [:shift :ctrl] :F (border.draw-after cmd-expand-windows))
 
 (hs.hotkey.bind [:shift :ctrl] :O (border.draw-after cmd-organize-screen))
 (hs.hotkey.bind [:shift :ctrl :cmd] :S (border.draw-after cmd-stack-group))
@@ -479,16 +502,6 @@
 
 (hs.hotkey.bind [:shift :ctrl] :forwarddelete cmd-hide-in-corner)
 (hs.hotkey.bind [:shift :ctrl] :delete cmd-hide-in-corner)
-
-;(hs.hotkey.bind [:shift :ctrl :cmd] :H (border.draw-after #(cmd-move-window :left)))
-;(hs.hotkey.bind [:shift :ctrl :cmd] :L (border.draw-after #(cmd-move-window :right)))
-
-;(hs.hotkey.bind [:shift :ctrl :cmd] :+ (border.draw-after #(cmd-resize-window :both-up)))
-;(hs.hotkey.bind [:shift :ctrl :cmd] :- (border.draw-after #(cmd-resize-window :both-down)))
-;(hs.hotkey.bind [:shift :ctrl :cmd] :Y (border.draw-after #(cmd-resize-window :horz-down)))
-;(hs.hotkey.bind [:shift :ctrl :cmd] :U (border.draw-after #(cmd-resize-window :vert-down)))
-;(hs.hotkey.bind [:shift :ctrl :cmd] :I (border.draw-after #(cmd-resize-window :vert-up)))
-;(hs.hotkey.bind [:shift :ctrl :cmd] :O (border.draw-after #(cmd-resize-window :horz-up)))
 
 (local window-mode (hs.hotkey.modal.new))
 (hs.hotkey.bind [:shift :ctrl] :W
