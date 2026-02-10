@@ -68,4 +68,5 @@
  : show-border
  : clear-borders
  : create-and-show-border
- : time-func}
+ : time-func
+ :brr create-and-show-border}

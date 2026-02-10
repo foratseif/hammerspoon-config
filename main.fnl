@@ -476,8 +476,16 @@
     (each [i win (ipairs (get-windows-inside (get-active-screen)))]
       (print (win:title)))))
 
-;(hs.hotkey.bind [:shift :ctrl] :D test)
-;(hs.hotkey.bind [:shift :ctrl] :R dbg.clear-borders)
+(lambda find-empty-spaces []
+  (let [screens (get-screens-sorted)
+        windows (get-windows-sorted)
+        groups  (get-groups)
+        columns  (get-columns-sorted)]
+    (each [i fr (ipairs groups)]
+          (dbg.brr :red fr))))
+
+(hs.hotkey.bind [:shift :ctrl] :D find-empty-spaces)
+(hs.hotkey.bind [:shift :ctrl] :R dbg.clear-borders)
 
 (hs.hotkey.bind [:cmd] :H #nil)
 (hs.hotkey.bind [:cmd] :M #nil)
