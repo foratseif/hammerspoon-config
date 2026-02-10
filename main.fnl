@@ -8,6 +8,7 @@
 (local PADDING 10)
 (local MOVE_STEP 150)
 (local SCALE_STEP 150)
+(local MIN_EMPTY_SIZE 200)
 
 ;; TODO
 ;; - new expand algorithm, where boxes meet in the middle
@@ -476,13 +477,71 @@
     (each [i win (ipairs (get-windows-inside (get-active-screen)))]
       (print (win:title)))))
 
+(lambda unique-sorted [tbl]
+  "Sort table and remove duplicates"
+  (let [sorted (icollect [_ v (ipairs tbl)] v)]
+    (table.sort sorted)
+    (icollect [i v (ipairs sorted)]
+      (if (or (= i 1) (not (= v (. sorted (- i 1)))))
+          v))))
+
+(lambda rect-overlaps-any-window? [rect windows]
+  "Returns truthy if rect overlaps any window frame"
+  (first windows
+         #(let [wf ($1:frame)
+                inter (rect:intersect wf)]
+            (and (> inter.w 0) (> inter.h 0)))))
+
+(lambda rect-contains? [outer inner]
+  "Returns true if outer fully contains inner"
+  (and (<= outer.x inner.x)
+       (<= outer.y inner.y)
+       (>= outer.x2 inner.x2)
+       (>= outer.y2 inner.y2)))
+
 (lambda find-empty-spaces []
-  (let [screens (get-screens-sorted)
-        windows (get-windows-sorted)
-        groups  (get-groups)
-        columns  (get-columns-sorted)]
-    (each [i fr (ipairs groups)]
-          (dbg.brr :red fr))))
+  (dbg.clear-borders)
+  (let [screen (get-active-screen)
+        sframe (pad-frame (screen:frame))
+        windows (get-windows-inside screen)
+        xs [sframe.x sframe.x2]
+        ys [sframe.y sframe.y2]]
+    ;; collect all edge coordinates from windows
+    (each [_ win (ipairs windows)]
+      (let [f (win:frame)]
+        (table.insert xs f.x)
+        (table.insert xs f.x2)
+        (table.insert ys f.y)
+        (table.insert ys f.y2)))
+    ;; clamp to screen bounds, sort, and deduplicate
+    (local uxs (unique-sorted
+                 (map xs #(math.max (math.min $1 sframe.x2) sframe.x))))
+    (local uys (unique-sorted
+                 (map ys #(math.max (math.min $1 sframe.y2) sframe.y))))
+    ;; enumerate all possible rectangles from coordinate pairs
+    (local empties [])
+    (for [i 1 (length uxs)]
+      (for [j (+ i 1) (length uxs)]
+        (for [k 1 (length uys)]
+          (for [l (+ k 1) (length uys)]
+            (let [x1 (. uxs i) x2 (. uxs j)
+                  y1 (. uys k) y2 (. uys l)
+                  w (- x2 x1) h (- y2 y1)
+                  rect (hs.geometry.rect x1 y1 w h)]
+              (if (and (>= w MIN_EMPTY_SIZE)
+                       (>= h MIN_EMPTY_SIZE)
+                       (not (rect-overlaps-any-window? rect windows)))
+                  (table.insert empties rect)))))))
+    ;; keep only maximal rectangles (not contained in a larger one)
+    (local maximal
+      (filter empties
+              (fn [rect]
+                (not (first empties
+                            #(and (not (same-frame? $1 rect))
+                                  (rect-contains? $1 rect)))))))
+    ;; draw all empty spaces
+    (each [_ rect (ipairs maximal)]
+      (dbg.brr :green rect))))
 
 (hs.hotkey.bind [:shift :ctrl] :D find-empty-spaces)
 (hs.hotkey.bind [:shift :ctrl] :R dbg.clear-borders)
