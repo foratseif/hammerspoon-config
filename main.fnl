@@ -480,6 +480,7 @@
 ;(hs.hotkey.bind [:shift :ctrl] :R dbg.clear-borders)
 
 (hs.hotkey.bind [:cmd] :H #nil)
+(hs.hotkey.bind [:cmd] :M #nil)
 
 (hs.hotkey.bind [:shift :ctrl] :J (border.draw-after #(cmd-focus-window-in (get-windows-sorted) :next)))
 (hs.hotkey.bind [:shift :ctrl] :K (border.draw-after #(cmd-focus-window-in (get-windows-sorted) :prev)))
