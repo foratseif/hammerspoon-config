@@ -1,13 +1,18 @@
 ;(local border-color {:red 0.2 :green 0.7 :blue 0.8 :alpha 1})
-(local border-width 3)
-(local border-offset (+ -2 border-width))
+(local border-width 5)
+(local border-radius 6)
+(local border-offset (+ -3 border-width))
+
+(lambda rgb [red green blue]
+  {:red (/ red 255) :green (/ green 255) :blue (/ blue 255) :alpha 255})
 
 (var mode :normal)
 (var focus-border nil)
 
 (lambda get-border-color []
   (case mode
-    :normal {:red 0.2 :green 0.7 :blue 0.8 :alpha 1}
+    :normal (rgb 57 56 87)
+    ;:normal {:red 0.2 :green 0.35 :blue 0.4 :alpha 1}
     :window {:red 0.95 :green 0.5 :blue 0.2 :alpha 1}
     _       {:red 1 :green 1 :blue 1 :alpha 1}))
 
@@ -23,7 +28,7 @@
     (border:setFill false)
     (border:setStrokeColor (get-border-color))
     (border:setStrokeWidth border-width)
-    (local radius (+ 7 border-width))
+    (local radius (+ border-radius border-width))
     (border:setRoundedRectRadii radius radius)
     (set focus-border border)))
 

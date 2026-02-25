@@ -5,7 +5,7 @@
 (local THRES_INSIDE 0.55)
 (local THRES_INTER 75)
 (local STACK_STEP 25)
-(local PADDING 10)
+(local PADDING 5)
 (local MOVE_STEP 150)
 (local SCALE_STEP 150)
 
