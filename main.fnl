@@ -450,6 +450,18 @@
       (hs.geometry.point (- frame.x2 5) (- frame.y2 5)))
     (next-win:focus)))
 
+(lambda cmd-move-window-to-edge [edge]
+  (let [window    (get-active-window)
+        win-frame (window:frame)
+        grp-frame (get-active-group)
+        scr-frame (frame-of (get-active-screen))
+        expanded  (pad-frame (expand-frame grp-frame scr-frame))]
+    (case edge
+      :top (window:setTopLeft (hs.geometry.point win-frame.x expanded.y))
+      :bottom (window:setTopLeft (hs.geometry.point win-frame.x (- expanded.y2 win-frame.h)))
+      :left (window:setTopLeft (hs.geometry.point expanded.x win-frame.y))
+      :right (window:setTopLeft (hs.geometry.point (- expanded.x2 win-frame.w) win-frame.y)))))
+
 ;; testing stuff here
 (lambda test []
   (let [screens (get-screens-sorted)
@@ -505,6 +517,11 @@
 (hs.hotkey.bind [:shift :ctrl] :O (border.draw-after cmd-organize-screen))
 (hs.hotkey.bind [:shift :ctrl :cmd] :S (border.draw-after cmd-stack-group))
 (hs.hotkey.bind [:shift :ctrl :cmd] :E (border.draw-after cmd-expand-group))
+
+(hs.hotkey.bind [:shift :ctrl] :up (border.draw-after #(cmd-move-window-to-edge :top)))
+(hs.hotkey.bind [:shift :ctrl] :down (border.draw-after #(cmd-move-window-to-edge :bottom)))
+(hs.hotkey.bind [:shift :ctrl] :left (border.draw-after #(cmd-move-window-to-edge :left)))
+(hs.hotkey.bind [:shift :ctrl] :right (border.draw-after #(cmd-move-window-to-edge :right)))
 
 (hs.hotkey.bind [:shift :ctrl :cmd] :J (border.draw-after #(cmd-migrate-window :next)))
 (hs.hotkey.bind [:shift :ctrl :cmd] :K (border.draw-after #(cmd-migrate-window :prev)))
